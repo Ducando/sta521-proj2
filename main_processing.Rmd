@@ -3,12 +3,117 @@ title: "521 Project 2"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include=FALSE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+library(viridis)
+
+# graph theme object 
+theme_settings <- theme_light() + theme(axis.text = element_text(size=8), axis.title = element_text(size = 9), legend.title = element_text(size = 9), plot.title = element_text(size = 10, hjust = 0.5)) 
+```
+
+## Section 1 
+
+&nbsp; 
+
+```{r}
+# read in files with column names 
+names <- c("y_coord", "x_coord", "expert", "ndai", "sd", "corr", "angle_df", 
+           "angle_cf", "angle_bf", "angle_af", "angle_an")
+
+imagem1 <- read.table('./data/imagem1.txt', col.names = names)
+imagem2 <- read.table('./data/imagem2.txt', col.names = names)
+imagem3 <- read.table('./data/imagem3.txt', col.names = names)
+
+
+# make expert column factor and text version
+imagem1 %>%
+  mutate(expert = as.factor(expert)) %>%
+  mutate(expert_text = ifelse(expert == 0, "unlabeled", ifelse(expert == 1, "cloudy","clear"))) -> imagem1
+
+imagem2 %>%
+  mutate(expert = as.factor(expert)) %>%
+  mutate(expert_text = ifelse(expert == 0, "unlabeled", ifelse(expert == 1, "cloudy","clear"))) -> imagem2
+
+imagem3 %>%
+  mutate(expert = as.factor(expert)) %>%
+  mutate(expert_text = ifelse(expert == 0, "unlabeled", ifelse(expert == 1, "cloudy","clear"))) -> imagem3
+
+imagem1 %>%
+  bind_rows(imagem2) %>%
+  bind_rows(imagem3) -> all
+
+```
+
+&nbsp; 
+
+#### Part B
+
+&nbsp; 
+
+```{r}
+# look at percentage for total 
+all %>%
+  group_by(expert_text) %>%
+  summarise(prop_total = round((n() / 345556),2))
+
+# look at percentage for each one 
+len1 <- nrow(imagem1)
+imagem1 %>%
+  group_by(expert_text) %>%
+  summarise(prop_total = round((n() / len1),2))
+
+len2 <- nrow(imagem2)
+imagem2 %>%
+  group_by(expert_text) %>%
+  summarise(prop_total = round((n() / len2),2))
+
+len3 <- nrow(imagem3)
+imagem3 %>%
+  group_by(expert_text) %>%
+  summarise(prop_total = round((n() / len3),2))
 ```
 
 
 ```{r}
+# Image 1
+ggplot(imagem1, aes(x = x_coord, y = y_coord, color = expert_text)) + 
+  geom_point() + 
+  theme_settings + 
+  labs(x = "X Coordinate", y = "Y Coordinate", color = "Expert Labels") +
+  scale_colour_manual(values = c("darkblue", "black", "lightgrey"))
+
+# Image 2
+ggplot(imagem2, aes(x = x_coord, y = y_coord, color = expert_text)) + 
+  geom_point() + 
+  theme_settings + 
+  labs(x = "X Coordinate", y = "Y Coordinate", color = "Expert Labels") +
+  scale_colour_manual(values = c("darkblue", "black", "lightgrey"))
+
+# Image 3
+ggplot(imagem3, aes(x = x_coord, y = y_coord, color = expert_text)) + 
+  geom_point() + 
+  theme_settings + 
+  labs(x = "X Coordinate", y = "Y Coordinate", color = "Expert Labels") +
+  scale_colour_manual(values = c("darkblue", "black", "lightgrey"))
+```
+
+&nbsp; 
+
+#### Part C
+
+&nbsp; 
+
+```{r}
 
 ```
+
+
+
+
+
+
+
+
 
