@@ -8,6 +8,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 library(tidyverse)
 library(viridis)
+library(GGally)
 
 # graph theme object 
 theme_settings <- theme_light() + theme(axis.text = element_text(size=8), axis.title = element_text(size = 9), legend.title = element_text(size = 9), plot.title = element_text(size = 10, hjust = 0.5)) 
@@ -106,10 +107,26 @@ ggplot(imagem3, aes(x = x_coord, y = y_coord, color = expert_text)) +
 &nbsp; 
 
 ```{r}
+# pairwise relationships between features 
+cor(all$ndai, all$corr)
 
+ggplot(imagem1, aes(x = ndai, y = corr)) + 
+  geom_point()
+
+ggplot(imagem1, aes(x = ndai, y = sd)) + 
+  geom_point()
+
+ggplot(imagem1, aes(x = corr, y = sd)) + 
+  geom_point()
+
+ggplot(imagem1, aes(x = angle_df, y = angle_bf)) + 
+  geom_point()
 ```
 
 
+```{r}
+# expert labels vs features 
+```
 
 
 
