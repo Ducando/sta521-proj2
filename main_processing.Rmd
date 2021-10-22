@@ -78,6 +78,9 @@ imagem3 %>%
 
 
 ```{r}
+
+# We might want to change the colors here becuase it's hard to distinguish between the blue and the black on the legend
+
 # Image 1
 ggplot(imagem1, aes(x = x_coord, y = y_coord, color = expert_text)) + 
   geom_point() + 
