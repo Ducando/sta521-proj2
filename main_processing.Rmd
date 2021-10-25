@@ -111,19 +111,18 @@ ggplot(imagem3, aes(x = x_coord, y = y_coord, color = expert_text)) +
 
 ```{r}
 # pairwise relationships between features 
-cor(all$ndai, all$corr)
+# cor(all$ndai, all$corr)
 
-ggplot(imagem1, aes(x = ndai, y = corr)) + 
-  geom_point()
+all %>%
+  select(ndai:angle_an) %>%
+  ggpairs()
+```
 
-ggplot(imagem1, aes(x = ndai, y = sd)) + 
-  geom_point()
-
-ggplot(imagem1, aes(x = corr, y = sd)) + 
-  geom_point()
-
-ggplot(imagem1, aes(x = angle_df, y = angle_bf)) + 
-  geom_point()
+```{r}
+# looking at al the angles 
+# all %>%
+#   select(angle_df:angle_an) %>%
+#   ggpairs()
 ```
 
 
@@ -131,12 +130,42 @@ ggplot(imagem1, aes(x = angle_df, y = angle_bf)) +
 # expert labels vs features 
 imagem1 %>%
   filter(expert != 0) %>%
-  ggplot(aes(x = ndai, y = corr, color = expert), alpha = 0.3) + 
-  geom_point()
+  ggplot(aes(x = ndai, fill= expert)) +
+  geom_histogram()
 
 imagem1 %>%
   filter(expert != 0) %>%
-  ggplot(aes(x = ndai, fill= expert)) +
+  ggplot(aes(x = corr, fill= expert)) +
+  geom_histogram()
+
+imagem1 %>%
+  filter(expert != 0) %>%
+  ggplot(aes(x = sd, fill= expert)) +
+  geom_histogram()
+
+imagem1 %>%
+  filter(expert != 0) %>%
+  ggplot(aes(x = angle_df, fill= expert)) +
+  geom_histogram()
+
+imagem1 %>%
+  filter(expert != 0) %>%
+  ggplot(aes(x = angle_cf, fill= expert)) +
+  geom_histogram()
+
+imagem1 %>%
+  filter(expert != 0) %>%
+  ggplot(aes(x = angle_bf, fill= expert)) +
+  geom_histogram()
+
+imagem1 %>%
+  filter(expert != 0) %>%
+  ggplot(aes(x = angle_af, fill= expert)) +
+  geom_histogram()
+
+imagem1 %>%
+  filter(expert != 0) %>%
+  ggplot(aes(x = angle_an, fill= expert)) +
   geom_histogram()
 ```
 
