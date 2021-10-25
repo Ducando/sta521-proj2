@@ -126,7 +126,26 @@ ggplot(imagem1, aes(x = angle_df, y = angle_bf)) +
 
 ```{r}
 # expert labels vs features 
+imagem1 %>%
+  filter(expert != 0) %>%
+  ggplot(aes(x = ndai, y = corr, color = expert), alpha = 0.3) + 
+  geom_point()
+
+imagem1 %>%
+  filter(expert != 0) %>%
+  ggplot(aes(x = ndai, fill= expert)) +
+  geom_histogram()
 ```
+
+
+
+
+
+
+
+
+
+
 
 
 
