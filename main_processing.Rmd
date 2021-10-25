@@ -78,6 +78,9 @@ imagem3 %>%
 
 
 ```{r}
+
+# We might want to change the colors here becuase it's hard to distinguish between the blue and the black on the legend
+
 # Image 1
 ggplot(imagem1, aes(x = x_coord, y = y_coord, color = expert_text)) + 
   geom_point() + 
@@ -138,7 +141,52 @@ imagem1 %>%
 ```
 
 
+## Section 2
 
+#### Part A
+```{r}
+# 12827 pixels in each block
+
+image1_x_min <- min(imagem1$x_coord)
+image1_x_max <- max(imagem1$x_coord)
+image1_x_step <- (image1_x_max-image1_x_min)/3
+image_1_xcord_left <- rep(c(image1_x_min,image1_x_min+image1_x_step,image1_x_min+2*image1_x_step),3)
+image_1_xcord_right <- rep(c(image1_x_min+image1_x_step-1,image1_x_min+2*image1_x_step-1,image1_x_max),3)
+image1_y_min <- min(imagem1$y_coord)
+image1_y_max <- max(imagem1$y_coord)
+image1_y_step <- (image1_y_max-image1_y_min)/3
+image_1_ycord_top <- c(rep(image1_y_min,3),rep(image1_y_min+image1_y_step,3),rep(image1_y_min+2*image1_y_step,3))
+image_1_ycord_bot <- c(rep(image1_y_min+image1_y_step-1,3),rep(image1_y_min+2*image1_y_step-1,3),rep(image1_y_max,3))
+image_1_blocks <- tibble(left = image_1_xcord_left, right = image_1_xcord_right,
+                         top = image_1_ycord_top, bottom = image_1_ycord_bot)
+
+image2_x_min <- min(imagem2$x_coord)
+image2_x_max <- max(imagem2$x_coord)
+image2_x_step <- floor((image2_x_max-image2_x_min)/3)
+image_2_xcord_left <- rep(c(image2_x_min,image2_x_min+image2_x_step,image2_x_min+2*image2_x_step),3)
+image_2_xcord_right <- rep(c(image2_x_min+image2_x_step-1,image2_x_min+2*image2_x_step-1,image2_x_max),3)
+image2_y_min <- min(imagem2$y_coord)
+image2_y_max <- max(imagem2$y_coord)
+image2_y_step <- (image2_y_max-image2_y_min)/3
+image_2_ycord_top <- c(rep(image2_y_min,3),rep(image2_y_min+image2_y_step,3),rep(image2_y_min+2*image2_y_step,3))
+image_2_ycord_bot <- c(rep(image2_y_min+image2_y_step-1,3),rep(image2_y_min+2*image2_y_step-1,3),rep(image2_y_max,3))
+image_2_blocks <- tibble(left = image_2_xcord_left, right = image_2_xcord_right,
+                         top = image_2_ycord_top, bottom = image_2_ycord_bot)
+
+image3_x_min <- min(imagem3$x_coord)
+image3_x_max <- max(imagem3$x_coord)
+image3_x_step <- floor((image3_x_max-image3_x_min)/3)
+image_3_xcord_left <- rep(c(image3_x_min,image3_x_min+image3_x_step,image3_x_min+2*image3_x_step),3)
+image_3_xcord_right <- rep(c(image3_x_min+image3_x_step-1,image3_x_min+2*image3_x_step-1,image3_x_max),3)
+image3_y_min <- min(imagem3$y_coord)
+image3_y_max <- max(imagem3$y_coord)
+image3_y_step <- (image3_y_max-image3_y_min)/3
+image_3_ycord_top <- c(rep(image3_y_min,3),rep(image3_y_min+image3_y_step,3),rep(image3_y_min+2*image3_y_step,3))
+image_3_ycord_bot <- c(rep(image3_y_min+image3_y_step-1,3),rep(image3_y_min+2*image3_y_step-1,3),rep(image3_y_max,3))
+image_3_blocks <- tibble(left = image_3_xcord_left, right = image_3_xcord_right,
+                         top = image_3_ycord_top, bottom = image_3_ycord_bot)
+
+```
 
 
 
