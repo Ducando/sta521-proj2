@@ -18,5 +18,5 @@ CVmaster <- function(model=c("lda","qda","rf","logistic","svmLinear"),X,y,k,loss
       crossVal[i] <- mean(preds != y[folds[[i]]])
     }
   }
-  return(mean(crossVal))
+  return(crossVal)
 }
