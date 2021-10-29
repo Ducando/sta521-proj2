@@ -215,15 +215,21 @@ image_3_blocks <- tibble(left = image_3_xcord_left, right = image_3_xcord_right,
 ```
 
 ```{r}
+set.seed(513)
 train_index_1 <- sample(1:9,5)
+set.seed(513)
 val_index_1 <- sample(setdiff(1:9,train_index_1),2)
 test_index_1 <- setdiff(1:9, c(train_index_1,val_index_1))
 
+set.seed(513)
 train_index_2 <- sample(1:9,5)
+set.seed(513)
 val_index_2 <- sample(setdiff(1:9,train_index_2),2)
 test_index_2 <- setdiff(1:9, c(train_index_2,val_index_2))
 
+set.seed(513)
 train_index_3 <- sample(1:9,5)
+set.seed(513)
 val_index_3 <- sample(setdiff(1:9,train_index_3),2)
 test_index_3 <- setdiff(1:9, c(train_index_3,val_index_3))
 
@@ -354,6 +360,141 @@ test <- rbind(imagem1[imagem1$x_coord >= test_blocks_1[[1,1]] &
                          imagem3$y_coord >= test_blocks_3[[2,3]]&
                          imagem3$y_coord <= test_blocks_3[[2,4]],])
 ```
+
+
+
+```{r}
+find_blocks <- function(x, y, num_blocks) {
+  n <- sqrt(num_blocks)
+  x_min <- min(x)
+  x_max <- max(x)
+  x_step <- (x_max-x_min)/n
+  
+  y_min <- min(y)
+  y_max <- max(y)
+  y_step <- (y_max-y_min)/n
+  
+  block <- tibble()
+  names(block) <- c("top", "bottom", "left", "right")
+  
+  for (i in seq_len(n)) {
+    # make top and bottom
+    top <- floor(y_min + (i-1) * y_step)
+    bot <- floor(y_max - (n-i) * y_step )
+    if (i != n)
+      bot <- bot - 1
+    
+    for (j in seq_len(n)){
+      # make left and right 
+      left <- floor(x_min + (j-1) * x_step)
+      right <- floor(x_max - (n-j) * x_step )
+      if (j != n)
+        right <- right - 1
+      
+      block %>%
+        bind_rows(data.frame(top, bot, left, right)) -> block 
+    }
+  }
+  
+  return(block)
+}
+
+# this is going to return overlapping intervals, so will need x >= top and x < bot, etc. 
+```
+
+
+
+```{r}
+split_blocks <- function(block, num_blocks, train_num_blocks, val_num_blocks) {
+  set.seed(513)
+  train_index <- sample(seq_len(num_blocks),train_num_blocks)
+  set.seed(513)
+  val_index <- sample(setdiff(seq_len(num_blocks),train_index),val_num_blocks)
+  test_index <- setdiff(seq_len(num_blocks), c(train_index,val_index))
+  
+  train_blocks <- block[train_index,]
+  val_blocks <- block[val_index,]
+  test_blocks <- block[test_index,]
+  
+  return(list(train = train_blocks, val = val_blocks, test = test_blocks))
+}
+```
+
+```{r}
+split_data <- function(data, block) {
+  final_data <- tibble()
+  for (i in seq_len(nrow(block))) {
+    coords <- block[i,]
+    
+    data %>%
+      filter(x_coord >= coords$left, x_coord <= coords$right,
+            y_coord >= coords$top, y_coord <= coords$bot) -> filtered_data
+        
+    final_data <- rbind(final_data, filtered_data)
+  }
+  
+  return(final_data)
+}
+```
+
+
+```{r}
+process_data_main <- function(df, num_blocks, train_num_blocks, val_num_blocks) {
+  blocks <- find_blocks(df$x_coord, df$y_coord, num_blocks)
+  block_indices <- split_blocks(blocks, num_blocks, train_num_blocks, val_num_blocks)
+  
+  val <- split_data(df, block_indices$val)
+  test <- split_data(df, block_indices$test)
+  train <- split_data(df, block_indices$train)
+
+  return(list(val = val, test = test, train = train))
+}
+```
+
+
+```{r}
+image1_dfs <- process_data_main(imagem1, 9, 5, 2)
+image1_test <- image1_dfs$test
+image1_train <- image1_dfs$train
+image1_val <- image1_dfs$val
+
+image2_dfs <- process_data_main(imagem2, 9, 5, 2)
+image2_test <- image2_dfs$test
+image2_train <- image2_dfs$train
+image2_val <- image2_dfs$val
+
+image3_dfs <- process_data_main(imagem3, 9, 5, 2)
+image3_test <- image3_dfs$test
+image3_train <- image3_dfs$train
+image3_val <- image3_dfs$val
+
+train <- image1_train %>%
+  bind_rows(image2_train) %>%
+  bind_rows(image3_train)
+
+test <- image1_test%>%
+  bind_rows(image2_test) %>%
+  bind_rows(image3_test)
+
+val <- image1_val%>%
+  bind_rows(image2_val) %>%
+  bind_rows(image3_val)
+
+# 345556
+# nrow(train) + nrow(test) + nrow(val)
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
