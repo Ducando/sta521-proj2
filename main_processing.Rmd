@@ -174,195 +174,15 @@ imagem1 %>%
 ## Section 2
 
 #### Part A
-```{r}
-image1_x_min <- min(imagem1$x_coord)
-image1_x_max <- max(imagem1$x_coord)
-image1_x_step <- (image1_x_max-image1_x_min)/3
-image_1_xcord_left <- rep(c(image1_x_min,image1_x_min+image1_x_step,image1_x_min+2*image1_x_step),3)
-image_1_xcord_right <- rep(c(image1_x_min+image1_x_step-1,image1_x_min+2*image1_x_step-1,image1_x_max),3)
-image1_y_min <- min(imagem1$y_coord)
-image1_y_max <- max(imagem1$y_coord)
-image1_y_step <- (image1_y_max-image1_y_min)/3
-image_1_ycord_top <- c(rep(image1_y_min,3),rep(image1_y_min+image1_y_step,3),rep(image1_y_min+2*image1_y_step,3))
-image_1_ycord_bot <- c(rep(image1_y_min+image1_y_step-1,3),rep(image1_y_min+2*image1_y_step-1,3),rep(image1_y_max,3))
-image_1_blocks <- tibble(left = image_1_xcord_left, right = image_1_xcord_right,
-                         top = image_1_ycord_top, bottom = image_1_ycord_bot)
-
-image2_x_min <- min(imagem2$x_coord)
-image2_x_max <- max(imagem2$x_coord)
-image2_x_step <- floor((image2_x_max-image2_x_min)/3)
-image_2_xcord_left <- rep(c(image2_x_min,image2_x_min+image2_x_step,image2_x_min+2*image2_x_step),3)
-image_2_xcord_right <- rep(c(image2_x_min+image2_x_step-1,image2_x_min+2*image2_x_step-1,image2_x_max),3)
-image2_y_min <- min(imagem2$y_coord)
-image2_y_max <- max(imagem2$y_coord)
-image2_y_step <- (image2_y_max-image2_y_min)/3
-image_2_ycord_top <- c(rep(image2_y_min,3),rep(image2_y_min+image2_y_step,3),rep(image2_y_min+2*image2_y_step,3))
-image_2_ycord_bot <- c(rep(image2_y_min+image2_y_step-1,3),rep(image2_y_min+2*image2_y_step-1,3),rep(image2_y_max,3))
-image_2_blocks <- tibble(left = image_2_xcord_left, right = image_2_xcord_right,
-                         top = image_2_ycord_top, bottom = image_2_ycord_bot)
-
-image3_x_min <- min(imagem3$x_coord)
-image3_x_max <- max(imagem3$x_coord)
-image3_x_step <- floor((image3_x_max-image3_x_min)/3)
-image_3_xcord_left <- rep(c(image3_x_min,image3_x_min+image3_x_step,image3_x_min+2*image3_x_step),3)
-image_3_xcord_right <- rep(c(image3_x_min+image3_x_step-1,image3_x_min+2*image3_x_step-1,image3_x_max),3)
-image3_y_min <- min(imagem3$y_coord)
-image3_y_max <- max(imagem3$y_coord)
-image3_y_step <- (image3_y_max-image3_y_min)/3
-image_3_ycord_top <- c(rep(image3_y_min,3),rep(image3_y_min+image3_y_step,3),rep(image3_y_min+2*image3_y_step,3))
-image_3_ycord_bot <- c(rep(image3_y_min+image3_y_step-1,3),rep(image3_y_min+2*image3_y_step-1,3),rep(image3_y_max,3))
-image_3_blocks <- tibble(left = image_3_xcord_left, right = image_3_xcord_right,
-                         top = image_3_ycord_top, bottom = image_3_ycord_bot)
-```
 
 ```{r}
 set.seed(513)
-train_index_1 <- sample(1:9,5)
-set.seed(513)
-val_index_1 <- sample(setdiff(1:9,train_index_1),2)
-test_index_1 <- setdiff(1:9, c(train_index_1,val_index_1))
-
-set.seed(513)
-train_index_2 <- sample(1:9,5)
-set.seed(513)
-val_index_2 <- sample(setdiff(1:9,train_index_2),2)
-test_index_2 <- setdiff(1:9, c(train_index_2,val_index_2))
-
-set.seed(513)
-train_index_3 <- sample(1:9,5)
-set.seed(513)
-val_index_3 <- sample(setdiff(1:9,train_index_3),2)
-test_index_3 <- setdiff(1:9, c(train_index_3,val_index_3))
-
-train_blocks_1 <- image_1_blocks[train_index_1,]
-val_blocks_1 <- image_1_blocks[val_index_1,]
-test_blocks_1 <- image_1_blocks[test_index_1,]
-
-train_blocks_2 <- image_2_blocks[train_index_2,]
-val_blocks_2 <- image_2_blocks[val_index_2,]
-test_blocks_2 <- image_2_blocks[test_index_2,]
-
-train_blocks_3 <- image_3_blocks[train_index_3,]
-val_blocks_3 <- image_3_blocks[val_index_3,]
-test_blocks_3 <- image_3_blocks[test_index_3,]
+images <- list(imagem1,imagem2,imagem3)
+indices <- sample(1:3)
+train_image <- images[[indices[1]]]
+val_image <- images[[indices[2]]]
+test_image <- images[[indices[3]]]
 ```
-
-```{r}
-# sum of the length train/val/test equals length of dataset
-
-train <- rbind(imagem1[imagem1$x_coord >= train_blocks_1[[1,1]] &
-                         imagem1$x_coord <= train_blocks_1[[1,2]]&
-                         imagem1$y_coord >= train_blocks_1[[1,3]]&
-                         imagem1$y_coord <= train_blocks_1[[1,4]],],
-               imagem1[imagem1$x_coord >= train_blocks_1[[2,1]] &
-                         imagem1$x_coord <= train_blocks_1[[2,2]]&
-                         imagem1$y_coord >= train_blocks_1[[2,3]]&
-                         imagem1$y_coord <= train_blocks_1[[2,4]],],
-               imagem1[imagem1$x_coord >= train_blocks_1[[3,1]] &
-                         imagem1$x_coord <= train_blocks_1[[3,2]]&
-                         imagem1$y_coord >= train_blocks_1[[3,3]]&
-                         imagem1$y_coord <= train_blocks_1[[3,4]],],
-               imagem1[imagem1$x_coord >= train_blocks_1[[4,1]] &
-                         imagem1$x_coord <= train_blocks_1[[4,2]]&
-                         imagem1$y_coord >= train_blocks_1[[4,3]]&
-                         imagem1$y_coord <= train_blocks_1[[4,4]],],
-               imagem1[imagem1$x_coord >= train_blocks_1[[5,1]] &
-                         imagem1$x_coord <= train_blocks_1[[5,2]]&
-                         imagem1$y_coord >= train_blocks_1[[5,3]]&
-                         imagem1$y_coord <= train_blocks_1[[5,4]],],
-               imagem2[imagem2$x_coord >= train_blocks_2[[1,1]] &
-                         imagem2$x_coord <= train_blocks_2[[1,2]]&
-                         imagem2$y_coord >= train_blocks_2[[1,3]]&
-                         imagem2$y_coord <= train_blocks_2[[1,4]],],
-               imagem2[imagem2$x_coord >= train_blocks_2[[2,1]] &
-                         imagem2$x_coord <= train_blocks_2[[2,2]]&
-                         imagem2$y_coord >= train_blocks_2[[2,3]]&
-                         imagem2$y_coord <= train_blocks_2[[2,4]],],
-               imagem2[imagem2$x_coord >= train_blocks_2[[3,1]] &
-                         imagem2$x_coord <= train_blocks_2[[3,2]]&
-                         imagem2$y_coord >= train_blocks_2[[3,3]]&
-                         imagem2$y_coord <= train_blocks_2[[3,4]],],
-               imagem2[imagem2$x_coord >= train_blocks_2[[4,1]] &
-                         imagem2$x_coord <= train_blocks_2[[4,2]]&
-                         imagem2$y_coord >= train_blocks_2[[4,3]]&
-                         imagem2$y_coord <= train_blocks_2[[4,4]],],
-               imagem2[imagem2$x_coord >= train_blocks_2[[5,1]] &
-                         imagem2$x_coord <= train_blocks_2[[5,2]]&
-                         imagem2$y_coord >= train_blocks_2[[5,3]]&
-                         imagem2$y_coord <= train_blocks_2[[5,4]],],
-               imagem3[imagem3$x_coord >= train_blocks_3[[1,1]] &
-                         imagem3$x_coord <= train_blocks_3[[1,2]]&
-                         imagem3$y_coord >= train_blocks_3[[1,3]]&
-                         imagem3$y_coord <= train_blocks_3[[1,4]],],
-               imagem3[imagem3$x_coord >= train_blocks_3[[2,1]] &
-                         imagem3$x_coord <= train_blocks_3[[2,2]]&
-                         imagem3$y_coord >= train_blocks_3[[2,3]]&
-                         imagem3$y_coord <= train_blocks_3[[2,4]],],
-               imagem3[imagem3$x_coord >= train_blocks_3[[3,1]] &
-                         imagem3$x_coord <= train_blocks_3[[3,2]]&
-                         imagem3$y_coord >= train_blocks_3[[3,3]]&
-                         imagem3$y_coord <= train_blocks_3[[3,4]],],
-               imagem3[imagem3$x_coord >= train_blocks_3[[4,1]] &
-                         imagem3$x_coord <= train_blocks_3[[4,2]]&
-                         imagem3$y_coord >= train_blocks_3[[4,3]]&
-                         imagem3$y_coord <= train_blocks_3[[4,4]],],
-               imagem3[imagem3$x_coord >= train_blocks_3[[5,1]] &
-                         imagem3$x_coord <= train_blocks_3[[5,2]]&
-                         imagem3$y_coord >= train_blocks_3[[5,3]]&
-                         imagem3$y_coord <= train_blocks_3[[5,4]],])
-
-val <- rbind(imagem1[imagem1$x_coord >= val_blocks_1[[1,1]] &
-                         imagem1$x_coord <= val_blocks_1[[1,2]]&
-                         imagem1$y_coord >= val_blocks_1[[1,3]]&
-                         imagem1$y_coord <= val_blocks_1[[1,4]],],
-               imagem1[imagem1$x_coord >= val_blocks_1[[2,1]] &
-                         imagem1$x_coord <= val_blocks_1[[2,2]]&
-                         imagem1$y_coord >= val_blocks_1[[2,3]]&
-                         imagem1$y_coord <= val_blocks_1[[2,4]],],
-               imagem2[imagem2$x_coord >= val_blocks_2[[1,1]] &
-                         imagem2$x_coord <= val_blocks_2[[1,2]]&
-                         imagem2$y_coord >= val_blocks_2[[1,3]]&
-                         imagem2$y_coord <= val_blocks_2[[1,4]],],
-               imagem2[imagem2$x_coord >= val_blocks_2[[2,1]] &
-                         imagem2$x_coord <= val_blocks_2[[2,2]]&
-                         imagem2$y_coord >= val_blocks_2[[2,3]]&
-                         imagem2$y_coord <= val_blocks_2[[2,4]],],
-               imagem3[imagem3$x_coord >= val_blocks_3[[1,1]] &
-                         imagem3$x_coord <= val_blocks_3[[1,2]]&
-                         imagem3$y_coord >= val_blocks_3[[1,3]]&
-                         imagem3$y_coord <= val_blocks_3[[1,4]],],
-               imagem3[imagem3$x_coord >= val_blocks_3[[2,1]] &
-                         imagem3$x_coord <= val_blocks_3[[2,2]]&
-                         imagem3$y_coord >= val_blocks_3[[2,3]]&
-                         imagem3$y_coord <= val_blocks_3[[2,4]],])
-
-test <- rbind(imagem1[imagem1$x_coord >= test_blocks_1[[1,1]] &
-                         imagem1$x_coord <= test_blocks_1[[1,2]]&
-                         imagem1$y_coord >= test_blocks_1[[1,3]]&
-                         imagem1$y_coord <= test_blocks_1[[1,4]],],
-               imagem1[imagem1$x_coord >= test_blocks_1[[2,1]] &
-                         imagem1$x_coord <= test_blocks_1[[2,2]]&
-                         imagem1$y_coord >= test_blocks_1[[2,3]]&
-                         imagem1$y_coord <= test_blocks_1[[2,4]],],
-               imagem2[imagem2$x_coord >= test_blocks_2[[1,1]] &
-                         imagem2$x_coord <= test_blocks_2[[1,2]]&
-                         imagem2$y_coord >= test_blocks_2[[1,3]]&
-                         imagem2$y_coord <= test_blocks_2[[1,4]],],
-               imagem2[imagem2$x_coord >= test_blocks_2[[2,1]] &
-                         imagem2$x_coord <= test_blocks_2[[2,2]]&
-                         imagem2$y_coord >= test_blocks_2[[2,3]]&
-                         imagem2$y_coord <= test_blocks_2[[2,4]],],
-               imagem3[imagem3$x_coord >= test_blocks_3[[1,1]] &
-                         imagem3$x_coord <= test_blocks_3[[1,2]]&
-                         imagem3$y_coord >= test_blocks_3[[1,3]]&
-                         imagem3$y_coord <= test_blocks_3[[1,4]],],
-               imagem3[imagem3$x_coord >= test_blocks_3[[2,1]] &
-                         imagem3$x_coord <= test_blocks_3[[2,2]]&
-                         imagem3$y_coord >= test_blocks_3[[2,3]]&
-                         imagem3$y_coord <= test_blocks_3[[2,4]],])
-```
-
-
 
 ```{r}
 find_blocks <- function(x, y, num_blocks) {
@@ -487,8 +307,12 @@ val <- image1_val%>%
 
 #### Part B
 ```{r}
-mean(test$expert == -1)
-mean(val$expert == -1)
+val %>%
+  filter(expert != 0)%>%
+  summarise(mean(expert == -1))
+test %>%
+  filter(expert != 0)%>%
+  summarise(mean(expert == -1))
 ```
   
 This classifier will have high average accuracy when the image is mostly cloud free.
@@ -514,12 +338,26 @@ See the CVmaster.R script.
 ## Section 1 
 
 #### Part A
+
 ```{r}
-X_train <- train %>%
+X_train_image <- train_image %>%
+  bind_rows(val_image) %>%
+  filter(expert != 0) %>%
+  select(ndai,sd,corr)
+y_train_image  <- train_image %>%
+  bind_rows(val_image) %>%
+  filter(expert!=0) %>%
+  .$expert %>%
+  droplevels()
+```
+
+
+```{r}
+X_train_blocks <- train %>%
   bind_rows(val) %>%
   filter(expert != 0) %>%
   select(ndai,sd,corr)
-y_train <- train %>%
+y_train_blocks  <- train %>%
   bind_rows(val) %>%
   filter(expert!=0) %>%
   .$expert %>%
@@ -527,28 +365,53 @@ y_train <- train %>%
 ```
 
 ```{r}
-lda_accuracy <- CVmaster("lda", X_train, y_train,10,"accuracy")
-lda_accuracy
-mean(lda_accuracy)
+image_lda_accuracy <- CVmaster("lda", X_train_image , y_train_image ,10,"accuracy")
+image_lda_accuracy
+mean(image_lda_accuracy)
 ```
 
 ```{r}
-qda_accuracy <- CVmaster("qda", X_train, y_train,10,"accuracy")
-qda_accuracy
-mean(qda_accuracy)
+block_lda_accuracy <- CVmaster("lda", X_train_blocks , y_train_blocks ,10,"accuracy")
+block_lda_accuracy
+mean(block_lda_accuracy)
 ```
 
 ```{r}
-log_accuracy <- CVmaster("logistic", X_train, y_train,10,"accuracy")
-log_accuracy
-mean(log_accuracy)
+image_qda_accuracy <- CVmaster("qda", X_train_image , y_train_image ,10,"accuracy")
+image_qda_accuracy
+mean(image_qda_accuracy)
+```
+
+```{r}
+block_qda_accuracy <- CVmaster("qda", X_train_blocks , y_train_blocks ,10,"accuracy")
+block_qda_accuracy
+mean(block_qda_accuracy)
+```
+
+```{r}
+image_log_accuracy <- CVmaster("logistic", X_train_image , y_train_image ,10,"accuracy")
+image_log_accuracy
+mean(image_log_accuracy)
+```
+
+```{r}
+block_log_accuracy <- CVmaster("logistic", X_train_blocks , y_train_blocks ,10,"accuracy")
+block_log_accuracy
+mean(block_log_accuracy)
 ```
 
 ```{r}
 # This takes too long, need to edit CVmaster to change number of trees
-rf_accuracy <- CVmaster("rf", X_train, y_train,10,"accuracy")
-rf_accuracy
-mean(rf_accuracy)
+image_rf_accuracy <- CVmaster("rf", X_train_image , y_train_image ,10,"accuracy")
+image_rf_accuracy
+mean(image_rf_accuracy)
+```
+
+```{r}
+# This takes too long, need to edit CVmaster to change number of trees
+block_rf_accuracy <- CVmaster("rf", X_train_blocks , y_train_blocks ,10,"accuracy")
+block_rf_accuracy
+mean(block_rf_accuracy)
 ```
 
 
