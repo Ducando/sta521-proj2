@@ -9,6 +9,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 library(tidyverse)
 library(viridis)
 library(GGally)
+source("CVmaster.R")
 
 # graph theme object 
 theme_settings <- theme_light() + theme(axis.text = element_text(size=8), axis.title = element_text(size = 9), legend.title = element_text(size = 9), plot.title = element_text(size = 10, hjust = 0.5)) 
@@ -484,13 +485,71 @@ val <- image1_val%>%
 # nrow(train) + nrow(test) + nrow(val)
 ```
 
+#### Part B
+```{r}
+mean(test$expert == -1)
+mean(val$expert == -1)
+```
+  
+This classifier will have high average accuracy when the image is mostly cloud free.
 
+#### Part C
+```{r}
+all %>%
+  select(ndai:angle_an) %>%
+  cor(.,as.integer(all$expert))
+```
+```{r}
+imagem1 %>%
+  filter(expert != 0) %>%
+  ggplot(aes(x = sd, fill= expert)) +
+  geom_histogram()
+```
+    
+NDAI and CORR are selected as best features becuase they have the highest correlation values with the expert labels. SD is also selected because the range of values between the cloudy and cloud free data is more separable than the range of values for the angles.
 
+#### Part D
+See the CVmaster.R script.
 
+## Section 1 
 
+#### Part A
+```{r}
+X_train <- train %>%
+  bind_rows(val) %>%
+  filter(expert != 0) %>%
+  select(ndai,sd,corr)
+y_train <- train %>%
+  bind_rows(val) %>%
+  filter(expert!=0) %>%
+  .$expert %>%
+  droplevels()
+```
 
+```{r}
+lda_accuracy <- CVmaster("lda", X_train, y_train,10,"accuracy")
+lda_accuracy
+mean(lda_accuracy)
+```
 
+```{r}
+qda_accuracy <- CVmaster("qda", X_train, y_train,10,"accuracy")
+qda_accuracy
+mean(qda_accuracy)
+```
 
+```{r}
+log_accuracy <- CVmaster("logistic", X_train, y_train,10,"accuracy")
+log_accuracy
+mean(log_accuracy)
+```
+
+```{r}
+# This takes too long, need to edit CVmaster to change number of trees
+rf_accuracy <- CVmaster("rf", X_train, y_train,10,"accuracy")
+rf_accuracy
+mean(rf_accuracy)
+```
 
 
 
