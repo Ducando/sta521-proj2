@@ -274,17 +274,17 @@ process_data_main <- function(df, num_blocks, train_num_blocks, val_num_blocks) 
 
 
 ```{r}
-image1_dfs <- process_data_main(imagem1, 9, 5, 2)
+image1_dfs <- process_data_main(imagem1, 16, 10, 3)
 image1_test <- image1_dfs$test
 image1_train <- image1_dfs$train
 image1_val <- image1_dfs$val
 
-image2_dfs <- process_data_main(imagem2, 9, 5, 2)
+image2_dfs <- process_data_main(imagem2, 16, 10, 3)
 image2_test <- image2_dfs$test
 image2_train <- image2_dfs$train
 image2_val <- image2_dfs$val
 
-image3_dfs <- process_data_main(imagem3, 9, 5, 2)
+image3_dfs <- process_data_main(imagem3, 16, 10, 3)
 image3_test <- image3_dfs$test
 image3_train <- image3_dfs$train
 image3_val <- image3_dfs$val
@@ -402,7 +402,7 @@ mean(block_log_accuracy)
 
 ```{r}
 # This takes too long, need to edit CVmaster to change number of trees
-image_rf_accuracy <- CVmaster("rf", X_train_image , y_train_image ,10,"accuracy")
+image_rf_accuracy <- CVmaster("rf", X_train_image , y_train_image ,10,"accuracy",ntree=5)
 image_rf_accuracy
 mean(image_rf_accuracy)
 ```
