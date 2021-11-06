@@ -55,26 +55,26 @@ imagem1 %>%
 &nbsp; 
 
 ```{r}
-# look at percentage for total 
-all %>%
-  group_by(expert_text) %>%
-  summarise(prop_total = round((n() / 345556),2))
-
-# look at percentage for each one 
-len1 <- nrow(imagem1)
-imagem1 %>%
-  group_by(expert_text) %>%
-  summarise(prop_total = round((n() / len1),2))
-
-len2 <- nrow(imagem2)
-imagem2 %>%
-  group_by(expert_text) %>%
-  summarise(prop_total = round((n() / len2),2))
-
-len3 <- nrow(imagem3)
-imagem3 %>%
-  group_by(expert_text) %>%
-  summarise(prop_total = round((n() / len3),2))
+# # look at percentage for total 
+# all %>%
+#   group_by(expert_text) %>%
+#   summarise(prop_total = round((n() / 345556),2))
+# 
+# # look at percentage for each one 
+# len1 <- nrow(imagem1)
+# imagem1 %>%
+#   group_by(expert_text) %>%
+#   summarise(prop_total = round((n() / len1),2))
+# 
+# len2 <- nrow(imagem2)
+# imagem2 %>%
+#   group_by(expert_text) %>%
+#   summarise(prop_total = round((n() / len2),2))
+# 
+# len3 <- nrow(imagem3)
+# imagem3 %>%
+#   group_by(expert_text) %>%
+#   summarise(prop_total = round((n() / len3),2))
 ```
 
 
@@ -83,25 +83,25 @@ imagem3 %>%
 # We might want to change the colors here becuase it's hard to distinguish between the blue and the black on the legend
 
 # Image 1
-ggplot(imagem1, aes(x = x_coord, y = y_coord, color = expert_text)) + 
-  geom_point() + 
-  theme_settings + 
-  labs(x = "X Coordinate", y = "Y Coordinate", color = "Expert Labels") +
-  scale_colour_manual(values = c("darkblue", "black", "lightgrey"))
-
-# Image 2
-ggplot(imagem2, aes(x = x_coord, y = y_coord, color = expert_text)) + 
-  geom_point() + 
-  theme_settings + 
-  labs(x = "X Coordinate", y = "Y Coordinate", color = "Expert Labels") +
-  scale_colour_manual(values = c("darkblue", "black", "lightgrey"))
-
-# Image 3
-ggplot(imagem3, aes(x = x_coord, y = y_coord, color = expert_text)) + 
-  geom_point() + 
-  theme_settings + 
-  labs(x = "X Coordinate", y = "Y Coordinate", color = "Expert Labels") +
-  scale_colour_manual(values = c("darkblue", "black", "lightgrey"))
+# ggplot(imagem1, aes(x = x_coord, y = y_coord, color = expert_text)) + 
+#   geom_point() + 
+#   theme_settings + 
+#   labs(x = "X Coordinate", y = "Y Coordinate", color = "Expert Labels") +
+#   scale_colour_manual(values = c("darkblue", "black", "lightgrey"))
+# 
+# # Image 2
+# ggplot(imagem2, aes(x = x_coord, y = y_coord, color = expert_text)) + 
+#   geom_point() + 
+#   theme_settings + 
+#   labs(x = "X Coordinate", y = "Y Coordinate", color = "Expert Labels") +
+#   scale_colour_manual(values = c("darkblue", "black", "lightgrey"))
+# 
+# # Image 3
+# ggplot(imagem3, aes(x = x_coord, y = y_coord, color = expert_text)) + 
+#   geom_point() + 
+#   theme_settings + 
+#   labs(x = "X Coordinate", y = "Y Coordinate", color = "Expert Labels") +
+#   scale_colour_manual(values = c("darkblue", "black", "lightgrey"))
 ```
 
 &nbsp; 
@@ -114,60 +114,53 @@ ggplot(imagem3, aes(x = x_coord, y = y_coord, color = expert_text)) +
 # pairwise relationships between features 
 # cor(all$ndai, all$corr)
 
-all %>%
-  select(ndai:angle_an) %>%
-  ggpairs()
-```
-
-```{r}
-# looking at al the angles 
 # all %>%
-#   select(angle_df:angle_an) %>%
+#   select(ndai:angle_an) %>%
 #   ggpairs()
 ```
 
 
 ```{r}
 # expert labels vs features 
-imagem1 %>%
-  filter(expert != 0) %>%
-  ggplot(aes(x = ndai, fill= expert)) +
-  geom_histogram()
-
-imagem1 %>%
-  filter(expert != 0) %>%
-  ggplot(aes(x = corr, fill= expert)) +
-  geom_histogram()
-
-imagem1 %>%
-  filter(expert != 0) %>%
-  ggplot(aes(x = sd, fill= expert)) +
-  geom_histogram()
-
-imagem1 %>%
-  filter(expert != 0) %>%
-  ggplot(aes(x = angle_df, fill= expert)) +
-  geom_histogram()
-
-imagem1 %>%
-  filter(expert != 0) %>%
-  ggplot(aes(x = angle_cf, fill= expert)) +
-  geom_histogram()
-
-imagem1 %>%
-  filter(expert != 0) %>%
-  ggplot(aes(x = angle_bf, fill= expert)) +
-  geom_histogram()
-
-imagem1 %>%
-  filter(expert != 0) %>%
-  ggplot(aes(x = angle_af, fill= expert)) +
-  geom_histogram()
-
-imagem1 %>%
-  filter(expert != 0) %>%
-  ggplot(aes(x = angle_an, fill= expert)) +
-  geom_histogram()
+# imagem1 %>%
+#   filter(expert != 0) %>%
+#   ggplot(aes(x = ndai, fill= expert)) +
+#   geom_histogram()
+# 
+# imagem1 %>%
+#   filter(expert != 0) %>%
+#   ggplot(aes(x = corr, fill= expert)) +
+#   geom_histogram()
+# 
+# imagem1 %>%
+#   filter(expert != 0) %>%
+#   ggplot(aes(x = sd, fill= expert)) +
+#   geom_histogram()
+# 
+# imagem1 %>%
+#   filter(expert != 0) %>%
+#   ggplot(aes(x = angle_df, fill= expert)) +
+#   geom_histogram()
+# 
+# imagem1 %>%
+#   filter(expert != 0) %>%
+#   ggplot(aes(x = angle_cf, fill= expert)) +
+#   geom_histogram()
+# 
+# imagem1 %>%
+#   filter(expert != 0) %>%
+#   ggplot(aes(x = angle_bf, fill= expert)) +
+#   geom_histogram()
+# 
+# imagem1 %>%
+#   filter(expert != 0) %>%
+#   ggplot(aes(x = angle_af, fill= expert)) +
+#   geom_histogram()
+# 
+# imagem1 %>%
+#   filter(expert != 0) %>%
+#   ggplot(aes(x = angle_an, fill= expert)) +
+#   geom_histogram()
 ```
 
 
