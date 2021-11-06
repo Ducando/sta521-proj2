@@ -268,31 +268,21 @@ process_data_main <- function(df, num_blocks, train_num_blocks, val_num_blocks) 
 
 ```{r}
 image1_dfs <- process_data_main(imagem1, 16, 10, 3)
-image1_test <- image1_dfs$test
-image1_train <- image1_dfs$train
-image1_val <- image1_dfs$val
-
 image2_dfs <- process_data_main(imagem2, 16, 10, 3)
-image2_test <- image2_dfs$test
-image2_train <- image2_dfs$train
-image2_val <- image2_dfs$val
-
 image3_dfs <- process_data_main(imagem3, 16, 10, 3)
-image3_test <- image3_dfs$test
-image3_train <- image3_dfs$train
-image3_val <- image3_dfs$val
 
-train <- image1_train %>%
-  bind_rows(image2_train) %>%
-  bind_rows(image3_train)
+train <- image1_dfs$train %>%
+  bind_rows(image2_dfs$train) %>%
+  bind_rows(image3_dfs$train)
 
-test <- image1_test%>%
-  bind_rows(image2_test) %>%
-  bind_rows(image3_test)
+test <- image1_dfs$test%>%
+  bind_rows(image2_dfs$test) %>%
+  bind_rows(image3_dfs$test)
 
-val <- image1_val%>%
-  bind_rows(image2_val) %>%
-  bind_rows(image3_val)
+
+val <- image1_dfs$val%>%
+  bind_rows(image2_dfs$val) %>%
+  bind_rows(image3_dfs$val)
 
 # 345556
 # nrow(train) + nrow(test) + nrow(val)
@@ -316,6 +306,7 @@ all %>%
   select(ndai:angle_an) %>%
   cor(.,as.integer(all$expert))
 ```
+
 ```{r}
 imagem1 %>%
   filter(expert != 0) %>%
