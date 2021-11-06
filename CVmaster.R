@@ -20,6 +20,8 @@ CVmaster <- function(model=c("lda","qda","rf","logistic","svmLinear"),X,y,k,loss
     else if (loss == "error"){
       crossVal[i] <- mean(preds != y[folds[[i]]])
     }
+    
+    message(sprintf("Done with: %.0f out of %.0f folds\n", i, k))
   }
   return(crossVal)
 }
