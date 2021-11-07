@@ -319,7 +319,7 @@ NDAI and CORR are selected as best features becuase they have the highest correl
 #### Part D
 See the CVmaster.R script.
 
-## Section 1 
+## Section 3
 
 #### Part A
 
@@ -348,55 +348,84 @@ y_train_blocks  <- train %>%
   droplevels()
 ```
 
+
 ```{r}
+# returns one row for each fold across number of folds
+
+# some function to loop through folds, returns list of mses
+# loop_folds <- function(model, x, y, max_folds, loss, ntree = NA) {
+#   
+#   mses <- tibble()
+#   
+#   for (folds in seq(from =2, to = max_folds, by = 1)){
+#     results <- CVmaster(model, x, y, folds, loss, ntree)
+#     mses <- bind_rows(mses, c(num_folds = folds, fold = list(seq_len(folds)), val_error = list(results)))
+#     message(sprintf("Finished for %.0f folds\n", folds))
+#   }
+#   
+#   return(mses)
+# }
+
+
+```
+
+Using the first way of splitting the data by image
+Looks like LDA is performing best with this way 
+```{r}
+# LDA 
 image_lda_accuracy <- CVmaster("lda", X_train_image , y_train_image ,10,"accuracy")
-image_lda_accuracy
-mean(image_lda_accuracy)
-```
-
-```{r}
-block_lda_accuracy <- CVmaster("lda", X_train_blocks , y_train_blocks ,10,"accuracy")
-block_lda_accuracy
-mean(block_lda_accuracy)
-```
-
-```{r}
+# QDA
 image_qda_accuracy <- CVmaster("qda", X_train_image , y_train_image ,10,"accuracy")
-image_qda_accuracy
-mean(image_qda_accuracy)
-```
-
-```{r}
-block_qda_accuracy <- CVmaster("qda", X_train_blocks , y_train_blocks ,10,"accuracy")
-block_qda_accuracy
-mean(block_qda_accuracy)
-```
-
-```{r}
+# LOGISTIC 
 image_log_accuracy <- CVmaster("logistic", X_train_image , y_train_image ,10,"accuracy")
-image_log_accuracy
-mean(image_log_accuracy)
-```
-
-```{r}
-block_log_accuracy <- CVmaster("logistic", X_train_blocks , y_train_blocks ,10,"accuracy")
-block_log_accuracy
-mean(block_log_accuracy)
-```
-
-```{r}
-# This takes too long, need to edit CVmaster to change number of trees
+# RF
 image_rf_accuracy <- CVmaster("rf", X_train_image , y_train_image ,10,"accuracy",ntree=5)
-image_rf_accuracy
-mean(image_rf_accuracy)
+
+
+# fix table 
+data.frame(type = "lda", acc = image_lda_accuracy, folds = 1:10) %>%
+  bind_rows(data.frame(type = "qda", acc = image_qda_accuracy, folds = 1:10)) %>%
+  bind_rows(data.frame(type = "log", acc = image_log_accuracy, folds = 1:10)) %>%
+  group_by(type) %>%
+  mutate(mean_acc = mean(acc)) %>%
+  pivot_wider(names_from = folds, values_from = acc) -> image_accuracy_table
 ```
 
+Second way of splitting the data by blocks
 ```{r}
-# This takes too long, need to edit CVmaster to change number of trees
+# LDA 
+block_lda_accuracy <- CVmaster("lda", X_train_blocks , y_train_blocks ,10,"accuracy")
+# QDA
+block_qda_accuracy <- CVmaster("qda", X_train_blocks , y_train_blocks ,10,"accuracy")
+# LOGISTIC 
+block_log_accuracy <- CVmaster("logistic", X_train_blocks , y_train_blocks ,10,"accuracy")
+# RF
 block_rf_accuracy <- CVmaster("rf", X_train_blocks , y_train_blocks ,10,"accuracy")
-block_rf_accuracy
-mean(block_rf_accuracy)
+
+data.frame(type = "lda", acc = block_lda_accuracy, folds = 1:10) %>%
+  bind_rows(data.frame(type = "qda", acc = block_qda_accuracy, folds = 1:10)) %>%
+  bind_rows(data.frame(type = "log", acc = block_log_accuracy, folds = 1:10)) %>%
+  group_by(type) %>%
+  mutate(mean_acc = mean(acc)) %>%
+  pivot_wider(names_from = folds, values_from = acc) -> block_accuracy_table
+
+library(plotROC)
+lda_tester <- CVmaster("lda", X_train_blocks , y_train_blocks, 10, "accuracy")
+
+lda_tester %>%
+  mutate(ylabels = as.integer(ylabels)) %>%
+  ggplot(aes(m = probs.1, d = ylabels, color = as.factor(fold))) + geom_roc( labels = FALSE)
 ```
+
+
+#### Section B 
+
+ROC 
+need to return the prediction and labels for each in the function
+and then use that to calculate
+the roc and then the mean one for each of the model methods 
+
+
 
 
 

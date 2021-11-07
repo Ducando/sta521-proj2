@@ -1,8 +1,10 @@
 CVmaster <- function(model=c("lda","qda","rf","logistic","svmLinear"),X,y,k,loss=c("accuracy","error"),ntree=NA){
   require(caret)
+  require(tidyverse)
   folds <- createFolds(y,k)
   
-  crossVal <- rep(NA,k)
+  # crossVal <- rep(NA,k)
+  trying <- tibble()
   for (i in 1:k){
     if (model == "logistic"){
       mod <- train(x=X[-folds[[i]],],y=y[-folds[[i]]],method = "glmnet",family="binomial")
@@ -14,14 +16,18 @@ CVmaster <- function(model=c("lda","qda","rf","logistic","svmLinear"),X,y,k,loss
     mod <- train(x=X[-folds[[i]],],y=y[-folds[[i]]],method = model)
     }
     preds <- predict(mod,X[folds[[i]],])
+    probs <- predict(mod,X[folds[[i]],], type = 'prob' )
     if (loss == "accuracy"){
-      crossVal[i] <- mean(preds == y[folds[[i]]])
+      # crossVal[i] <- mean(preds == y[folds[[i]]])
+      crossVal <- mean(preds == y[folds[[i]]])
     }
     else if (loss == "error"){
-      crossVal[i] <- mean(preds != y[folds[[i]]])
+      # crossVal[i] <- mean(preds != y[folds[[i]]])
+      crossVal <- mean(preds != y[folds[[i]]])
     }
     
-    message(sprintf("Done with: %.0f out of %.0f folds\n", i, k))
+    trying <- bind_rows(trying, data.frame(fold = i, cval = crossVal, probs = probs, ylabels = y[folds[[i]]]))
   }
-  return(crossVal)
+  # return(crossVal)
+  return(trying)
 }
