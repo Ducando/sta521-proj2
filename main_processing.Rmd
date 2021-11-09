@@ -414,7 +414,7 @@ lda_tester <- CVmaster("lda", X_train_blocks , y_train_blocks, 10, "accuracy")
 
 lda_tester %>%
   mutate(ylabels = as.integer(ylabels)) %>%
-  ggplot(aes(m = probs.1, d = ylabels, color = as.factor(fold))) + geom_roc( labels = FALSE)
+  ggplot(aes(m = probs.1, d = ylabels)) + geom_roc( labels = FALSE)
 ```
 
 
