@@ -293,6 +293,13 @@ val <- image1_dfs$val%>%
 
 #### Part B
 ```{r}
+val_image %>%
+  filter(expert != 0)%>%
+  summarise(mean(expert == -1))
+test_image %>%
+  filter(expert != 0)%>%
+  summarise(mean(expert == -1))
+
 val %>%
   filter(expert != 0)%>%
   summarise(mean(expert == -1))
