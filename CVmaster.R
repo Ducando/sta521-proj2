@@ -9,7 +9,7 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
   require(MASS)
   
   # check if model in one of the options 
-  model_options <- c("lda","qda","rf","logistic","svm", "boosted_trees")
+  model_options <- c("lda","qda","rf","logistic", "boosted_trees")
   if(!(model %in% model_options)){
     message("Model not available, please choose from: lda, qda, rf, logistic, svm, rf_boost")
     break
