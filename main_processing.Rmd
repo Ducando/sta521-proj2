@@ -9,7 +9,10 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 library(tidyverse)
 library(viridis)
 library(GGally)
+library(tidymodels)
 source("CVmaster.R")
+source("CVmaster2.R")
+
 
 # graph theme object 
 theme_settings <- theme_light() + theme(axis.text = element_text(size=8), axis.title = element_text(size = 9), legend.title = element_text(size = 9), plot.title = element_text(size = 10, hjust = 0.5)) 
@@ -365,12 +368,104 @@ y_train_blocks  <- train %>%
 #   
 #   return(mses)
 # }
+```
 
+First modelling by splitting the data by image and by block 
+```{r}
+## RUN IMAGE MODELS 
+
+# LOGISTIC 
+image_log <- CVmaster2(model = "logistic", X = X_train_image, y =y_train_image, 
+                       k = 10, loss = c("accuracy", "roc"))
+# RF
+image_rf <- CVmaster2(model = "rf", X = X_train_image, y = y_train_image ,
+                      k = 10, loss = c("accuracy", "roc"))
+
+# BOOSTED TREES 
+image_boost <- CVmaster2(model = "rf_boost", X = X_train_blocks, y = y_train_blocks ,
+                      k = 10, loss = c("accuracy", "roc")) 
+
+# SVM 
+# LDA 
+# QDA 
+
+
+
+## RUN BLOCK MODELS 
+# LOGISTIC 
+block_log <- CVmaster2(model = "logistic", X = X_train_blocks, y =y_train_blocks, 
+                       k = 10, loss = c("accuracy", "roc"))
+# RF
+block_rf <- CVmaster2(model = "rf", X = X_train_blocks, y = y_train_blocks ,
+                      k = 10, loss = c("accuracy", "roc"))
+
+# BOOSTED TREES 
+block_boost <- CVmaster2(model = "rf_boost", X = X_train_blocks, y = y_train_blocks ,
+                      k = 10, loss = c("accuracy", "roc")) 
+
+# SVM 
+# LDA 
+# QDA 
 
 ```
 
-Using the first way of splitting the data by image
-Looks like LDA is performing best with this way 
+```{r}
+## GET ACCURACY ESTIMATES BY MODEL 
+image_log$accuracy %>%
+  bind_rows(image_rf$accuracy) %>%
+  bind_rows(image_boost$accuracy) %>%
+  mutate(type = "Image") %>%
+  bind_rows(block_log$accuracy) %>%
+  bind_rows(block_rf$accuracy) %>%
+  bind_rows(block_boost$accuracy) %>%
+  mutate(type = ifelse(is.na(type), "Block", type)) %>%
+  group_by(type,model) %>%
+  rename(accuracy = mean) %>%
+  mutate(mean_accuracy = mean(accuracy)) %>%
+  pivot_wider(names_from = id, values_from = accuracy) 
+
+# add svm, lda, qda
+# reformat the tuning parameter columns, take out metric, reorder, general formatting
+
+  
+```
+
+
+#### Part B 
+```{r}
+## GET ROC CURVES BY MODEL 
+
+image_log$roc %>%
+  bind_rows(image_rf$roc) %>%
+  bind_rows(image_boost$roc) +
+  ggplot(aes(x = 1 - specificity, y = sensitivity, col = model)) + 
+  geom_path(lwd = 0.5, alpha = 0.6) +
+  geom_abline(lty = 3) + 
+  coord_equal() 
+
+
+  block_log$roc %>%
+  bind_rows(block_rf$roc) %>%
+  bind_rows(block_boost$roc) %>%
+  ggplot(aes(x = 1 - specificity, y = sensitivity, col = model)) + 
+  geom_path(lwd = 0.5, alpha = 0.6) +
+  geom_abline(lty = 3) + 
+  coord_equal() 
+
+# add svm, qda, lda
+# change colors, linetype, size
+
+```
+
+#### Part C 
+```{r}
+## PRECISION ESTIMATES 
+
+## PLOTTING PREDICTIONS BY COORDS 
+```
+
+
+
 ```{r}
 # LDA 
 image_lda_accuracy <- CVmaster("lda", X_train_image , y_train_image ,10,"accuracy")
@@ -378,17 +473,31 @@ image_lda_accuracy <- CVmaster("lda", X_train_image , y_train_image ,10,"accurac
 image_qda_accuracy <- CVmaster("qda", X_train_image , y_train_image ,10,"accuracy")
 # LOGISTIC 
 image_log_accuracy <- CVmaster("logistic", X_train_image , y_train_image ,10,"accuracy")
+
 # RF
 image_rf_accuracy <- CVmaster("rf", X_train_image , y_train_image ,10,"accuracy",ntree=5)
 
 
 # fix table 
-data.frame(type = "lda", acc = image_lda_accuracy, folds = 1:10) %>%
-  bind_rows(data.frame(type = "qda", acc = image_qda_accuracy, folds = 1:10)) %>%
-  bind_rows(data.frame(type = "log", acc = image_log_accuracy, folds = 1:10)) %>%
-  group_by(type) %>%
-  mutate(mean_acc = mean(acc)) %>%
-  pivot_wider(names_from = folds, values_from = acc) -> image_accuracy_table
+# data.frame(type = "lda", acc = image_lda_accuracy, folds = 1:10) %>%
+#   bind_rows(data.frame(type = "qda", acc = image_qda_accuracy, folds = 1:10)) %>%
+#   bind_rows(data.frame(type = "log", acc = image_log_accuracy, folds = 1:10)) %>%
+#   group_by(type) %>%
+#   mutate(mean_acc = mean(acc)) %>%
+#   pivot_wider(names_from = folds, values_from = acc) -> image_accuracy_table
+```
+
+```{r}
+
+image_log_test <- CVmaster2(model = "logistic", X = X_train_image, y =y_train_image, 
+                       k = 10, loss = c("accuracy", "roc"))
+
+
+image_log_test$.metrics
+  
+block_boost$roc
+
+
 ```
 
 Second way of splitting the data by blocks
@@ -402,12 +511,12 @@ block_log_accuracy <- CVmaster("logistic", X_train_blocks , y_train_blocks ,10,"
 # RF
 block_rf_accuracy <- CVmaster("rf", X_train_blocks , y_train_blocks ,10,"accuracy")
 
-data.frame(type = "lda", acc = block_lda_accuracy, folds = 1:10) %>%
-  bind_rows(data.frame(type = "qda", acc = block_qda_accuracy, folds = 1:10)) %>%
-  bind_rows(data.frame(type = "log", acc = block_log_accuracy, folds = 1:10)) %>%
-  group_by(type) %>%
-  mutate(mean_acc = mean(acc)) %>%
-  pivot_wider(names_from = folds, values_from = acc) -> block_accuracy_table
+# data.frame(type = "lda", acc = block_lda_accuracy, folds = 1:10) %>%
+#   bind_rows(data.frame(type = "qda", acc = block_qda_accuracy, folds = 1:10)) %>%
+#   bind_rows(data.frame(type = "log", acc = block_log_accuracy, folds = 1:10)) %>%
+#   group_by(type) %>%
+#   mutate(mean_acc = mean(acc)) %>%
+#   pivot_wider(names_from = folds, values_from = acc) -> block_accuracy_table
 
 library(plotROC)
 lda_tester <- CVmaster("lda", X_train_blocks , y_train_blocks, 10, "accuracy")
@@ -416,14 +525,6 @@ lda_tester %>%
   mutate(ylabels = as.integer(ylabels)) %>%
   ggplot(aes(m = probs.1, d = ylabels)) + geom_roc( labels = FALSE)
 ```
-
-
-#### Section B 
-
-ROC 
-need to return the prediction and labels for each in the function
-and then use that to calculate
-the roc and then the mean one for each of the model methods 
 
 
 
