@@ -86,7 +86,7 @@ CVmaster2 <- function (model,X,y,k,loss, estimates, ntree=NA) {
       final_results <- c(final_results, roc = list(roc))
     } # end roc 
     
-    # if precision 
+    # if conf_mat
     if("conf_mat" %in% estimates){
       res %>%
         collect_predictions(parameters = best) -> best_res
@@ -181,6 +181,44 @@ CVmaster2 <- function (model,X,y,k,loss, estimates, ntree=NA) {
       
     } # end roc 
     
+    # if conf_mat
+    if("conf_mat" %in% estimates){
+      res %>%
+        collect_predictions(parameters = best) -> best_res
+      
+      best_res %>%
+        group_by(id) %>%
+        conf_mat(labels, `.pred_class`) %>%
+        mutate(tidied = map(conf_mat, tidy)) %>%
+        unnest(tidied) -> cells_per_resample
+      
+      counts_per_resample <- best_res %>%
+        group_by(id) %>%
+        summarize(total = n()) %>%
+        left_join(cells_per_resample, by = "id") %>%
+        mutate(prop = value/total) %>%
+        group_by(name) %>%
+        summarize(prop = mean(prop))
+      
+      mean_cmat <- matrix(counts_per_resample$prop, byrow = TRUE, ncol = 2)
+      mean_cmat <- data.frame(mean_cmat)
+      rownames(mean_cmat) <- paste0("predict_",levels(test_log$labels))
+      colnames(mean_cmat) <- paste0("truth_", levels(test_log$labels))
+      
+      # append to final_results 
+      final_results <- c(final_results, conf_mat = list(mean_cmat))
+      
+    } # end conf_mat
+    
+    # if precision
+    if("precision" %in% estimates){
+      # TP / (TP + FP)
+      precision <- mean_cmat["predict_1", "truth_1"] / 
+        (mean_cmat["predict_1", "truth_1"] + mean_cmat["predict_1", "truth_-1"])
+      
+      # append to final_results 
+      final_results <- c(final_results, precision = list(precision))
+    } # end precision
     
     
   } # end random forest 
@@ -238,10 +276,44 @@ CVmaster2 <- function (model,X,y,k,loss, estimates, ntree=NA) {
       
     } # end roc
     
+    # if conf_mat
+    if("conf_mat" %in% estimates){
+      res %>%
+        collect_predictions(parameters = best) -> best_res
+      
+      best_res %>%
+        group_by(id) %>%
+        conf_mat(labels, `.pred_class`) %>%
+        mutate(tidied = map(conf_mat, tidy)) %>%
+        unnest(tidied) -> cells_per_resample
+      
+      counts_per_resample <- best_res %>%
+        group_by(id) %>%
+        summarize(total = n()) %>%
+        left_join(cells_per_resample, by = "id") %>%
+        mutate(prop = value/total) %>%
+        group_by(name) %>%
+        summarize(prop = mean(prop))
+      
+      mean_cmat <- matrix(counts_per_resample$prop, byrow = TRUE, ncol = 2)
+      mean_cmat <- data.frame(mean_cmat)
+      rownames(mean_cmat) <- paste0("predict_",levels(test_log$labels))
+      colnames(mean_cmat) <- paste0("truth_", levels(test_log$labels))
+      
+      # append to final_results 
+      final_results <- c(final_results, conf_mat = list(mean_cmat))
+      
+    } # end conf_mat
     
-    
-    
-    
+    # if precision
+    if("precision" %in% estimates){
+      # TP / (TP + FP)
+      precision <- mean_cmat["predict_1", "truth_1"] / 
+        (mean_cmat["predict_1", "truth_1"] + mean_cmat["predict_1", "truth_-1"])
+      
+      # append to final_results 
+      final_results <- c(final_results, precision = list(precision))
+    } # end precision
     
     
   } # end boost 

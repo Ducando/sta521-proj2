@@ -519,6 +519,7 @@ image_log$roc %>%
 #### Part C 
 ```{r}
 ## PRECISION ESTIMATES 
+image_log$precision
 
 ## CONF MATRIX
 
