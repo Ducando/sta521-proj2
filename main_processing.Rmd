@@ -760,26 +760,44 @@ ggplot(image_3_probs, aes(x_coord,y_coord, fill = prob)) +
 
 ```{r}
 image_1_pred_class <- image_1_pred_class %>%
-  mutate(misclassified = ifelse(imagem1$expert != 0 & class != imagem1$expert,1,0))
+  mutate(misclassified = ifelse(imagem1$expert != 0 & class != imagem1$expert,"Yes","No"))
 
 ggplot(image_1_pred_class, aes(x_coord,y_coord, fill = misclassified)) + 
-     geom_raster()
+     geom_raster()+ scale_fill_manual(values = c("#132B43", "#56B1F7"))
 ```
 
 ```{r}
 image_2_pred_class <- image_2_pred_class %>%
-  mutate(misclassified = ifelse(imagem2$expert != 0 & class != imagem2$expert,1,0))
+  mutate(misclassified = ifelse(imagem2$expert != 0 & class != imagem2$expert,"Yes","No"))
 
 ggplot(image_2_pred_class, aes(x_coord,y_coord, fill = misclassified)) + 
-     geom_raster()
+     geom_raster()+ scale_fill_manual(values = c("#132B43", "#56B1F7"))
 ```
 
 ```{r}
 image_3_pred_class <- image_3_pred_class %>%
-  mutate(misclassified = ifelse(imagem3$expert != 0 & class != imagem3$expert,1,0))
+  mutate(misclassified = ifelse(imagem3$expert != 0 & class != imagem3$expert,"Yes","No"))
 
 ggplot(image_3_pred_class, aes(x_coord,y_coord, fill = misclassified)) + 
-     geom_raster()
+     geom_raster()+ scale_fill_manual(values = c("#132B43", "#56B1F7"))
 ```
+
+```{r}
+image_1_pred_class <- image_1_pred_class %>%
+  mutate(misclassification = ifelse(imagem1$expert != 0 & class != imagem1$expert,1,.2))
+ggplot(image_1_pred_class, aes(x_coord,y_coord, fill = class,alpha=misclassification)) + 
+  geom_raster()+ scale_fill_manual(values = c("#132B43", "#56B1F7"))+ scale_alpha_identity()
+
+image_2_pred_class <- image_2_pred_class %>%
+  mutate(misclassification = ifelse(imagem2$expert != 0 & class != imagem2$expert,1,.2))
+ggplot(image_2_pred_class, aes(x_coord,y_coord, fill = class,alpha=misclassification)) + 
+  geom_raster()+ scale_fill_manual(values = c("#132B43", "#56B1F7"))+ scale_alpha_identity()
+
+image_3_pred_class <- image_3_pred_class %>%
+  mutate(misclassification = ifelse(imagem3$expert != 0 & class != imagem3$expert,1,.2))
+ggplot(image_3_pred_class, aes(x_coord,y_coord, fill = class,alpha=misclassification)) + 
+  geom_raster()+ scale_fill_manual(values = c("#132B43", "#56B1F7"))+ scale_alpha_identity()
+```
+
 
 
