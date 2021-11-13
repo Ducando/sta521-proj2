@@ -383,14 +383,14 @@ First modelling by splitting the data by image and by block
 
 # LOGISTIC 
 image_log <- CVmaster2(model = "logistic", X = X_train_image, y =y_train_image, 
-                       k = 10, loss = c("accuracy", "roc"))
+                       k = 10, loss = c("accuracy"), estimates = c("roc", "conf_mat"))
 # RF
 image_rf <- CVmaster2(model = "rf", X = X_train_image, y = y_train_image ,
-                      k = 10, loss = c("accuracy", "roc"))
+                      k = 10, loss = c("accuracy"), estimates = c("roc", "conf_mat"))
 
 # BOOSTED TREES 
-image_boost <- CVmaster2(model = "rf_boost", X = X_train_blocks, y = y_train_blocks ,
-                      k = 10, loss = c("accuracy", "roc")) 
+image_boost <- CVmaster2(model = "boosted_trees", X = X_train_blocks, y = y_train_blocks ,
+                      k = 10, loss = c("accuracy"), estimates = c("roc", "conf_mat")) 
 
 # SVM 
 # LDA 
@@ -401,20 +401,48 @@ image_boost <- CVmaster2(model = "rf_boost", X = X_train_blocks, y = y_train_blo
 ## RUN BLOCK MODELS 
 # LOGISTIC 
 block_log <- CVmaster2(model = "logistic", X = X_train_blocks, y =y_train_blocks, 
-                       k = 10, loss = c("accuracy", "roc"))
+                       k = 10, loss = c("accuracy"), estimates = c("roc", "conf_mat"))
 # RF
 block_rf <- CVmaster2(model = "rf", X = X_train_blocks, y = y_train_blocks ,
-                      k = 10, loss = c("accuracy", "roc"))
+                      k = 10, loss = c("accuracy"), estimates = c("roc", "conf_mat"))
 
 # BOOSTED TREES 
-block_boost <- CVmaster2(model = "rf_boost", X = X_train_blocks, y = y_train_blocks ,
-                      k = 10, loss = c("accuracy", "roc")) 
+block_boost <- CVmaster2(model = "boosted_trees", X = X_train_blocks, y = y_train_blocks ,
+                      k = 10, loss = c("accuracy"), estimates = c("roc", "conf_mat")) 
 
 # SVM 
 # LDA 
 # QDA 
-
 ```
+
+```{r}
+# image_log %>%
+#   select_best() -> test_best
+# 
+# image_log %>%
+#         collect_predictions(parameters = test_best) -> test_log
+# 
+# test_log %>%
+# group_by(id) %>%
+#   conf_mat(labels, `.pred_class`) %>%
+#   mutate(tidied = map(conf_mat, tidy)) %>%
+#   unnest(tidied) -> cells_per_resample
+# 
+# counts_per_resample <- test_log %>%
+#   group_by(id) %>%
+#   summarize(total = n()) %>%
+#   left_join(cells_per_resample, by = "id") %>%
+#   mutate(prop = value/total) %>%
+#   group_by(name) %>%
+#   summarize(prop = mean(prop))
+# 
+# mean_cmat <- matrix(counts_per_resample$prop, byrow = TRUE, ncol = 2)
+# rownames(mean_cmat) <- levels(test_log$labels)
+# colnames(mean_cmat) <- levels(test_log$labels)
+```
+
+
+
 
 ```{r}
 ## GET ACCURACY ESTIMATES BY MODEL 

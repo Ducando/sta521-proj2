@@ -1,4 +1,4 @@
-CVmaster2 <- function (model,X,y,k,loss, ntree=NA) {
+CVmaster2 <- function (model,X,y,k,loss, estimates, ntree=NA) {
   require(tidyverse)
   require(tidymodels)
   require(workflows)
@@ -10,11 +10,13 @@ CVmaster2 <- function (model,X,y,k,loss, ntree=NA) {
   # require(parallel)
   
   # check if model in one of the options 
-  model_options <- c("lda","qda","rf","logistic","svm", "rf_boost")
+  model_options <- c("lda","qda","rf","logistic","svm", "boosted_trees")
   if(!(model %in% model_options)){
-    message(paste0("Model not available, please choose from: lda, qda, rf, logistic, svm, rf_boost"))
+    message("Model not available, please choose from: lda, qda, rf, logistic, svm, rf_boost")
     break
   }
+  
+  # check if loss/estimates is in the options 
   
   # split data into folds 
   data <- bind_cols(X, labels = y)
@@ -22,7 +24,7 @@ CVmaster2 <- function (model,X,y,k,loss, ntree=NA) {
   folds <- vfold_cv(data, v = k)
   
   # initializing final returned objects 
-  estimates <- list()
+  final_results <- list()
   
   # fit models 
   if(model == "logistic"){
@@ -49,11 +51,7 @@ CVmaster2 <- function (model,X,y,k,loss, ntree=NA) {
                 control = control_grid(save_pred = TRUE),
                 resamples = folds)
     
-    return(res)
-    
-    
-    ## FIND ACCURACIES
-    # find best parameter based on accuracy 
+  
     # if loss contains accuracy
     if ("accuracy" %in% loss){
       res %>% select_best("accuracy")  -> best
@@ -74,22 +72,47 @@ CVmaster2 <- function (model,X,y,k,loss, ntree=NA) {
         distinct() %>%
         mutate(model = "Logistic Regression") -> accuracies
       
-      # append to estimates
-      estimates <- c(estimates, accuracy = list(accuracies))
+      # append to final_results
+      final_results <- c(final_results, accuracy = list(accuracies))
     } # end accuracy 
-    if ("roc" %in% loss){
-      ## FIND ROC VALUES
-      # if roc in loss
+    # if roc in loss
+    if ("roc" %in% estimates){
       res %>%
         collect_predictions(parameters = best) %>%
         roc_curve(labels, `.pred_-1`) %>%
         mutate(model = "Logistic Regression") -> roc
       
-      # append to estimates 
-      estimates <- c(estimates, roc = list(roc))
+      # append to final_results 
+      final_results <- c(final_results, roc = list(roc))
     } # end roc 
     
-    
+    # if precision 
+    if("conf_mat" %in% estimates){
+      res %>%
+        collect_predictions(parameters = best) -> best_res
+      
+      best_res %>%
+        group_by(id) %>%
+        conf_mat(labels, `.pred_class`) %>%
+        mutate(tidied = map(conf_mat, tidy)) %>%
+        unnest(tidied) -> cells_per_resample
+      
+      counts_per_resample <- best_res %>%
+        group_by(id) %>%
+        summarize(total = n()) %>%
+        left_join(cells_per_resample, by = "id") %>%
+        mutate(prop = value/total) %>%
+        group_by(name) %>%
+        summarize(prop = mean(prop))
+      
+      mean_cmat <- matrix(counts_per_resample$prop, byrow = TRUE, ncol = 2)
+      rownames(mean_cmat) <- levels(test_log$labels)
+      colnames(mean_cmat) <- levels(test_log$labels)
+      
+      # append to final_results 
+      final_results <- c(final_results, conf_mat = list(mean_cmat))
+      
+    } # end conf_mat
     
   } # end logistic 
   else if (model == "rf") {
@@ -131,33 +154,26 @@ CVmaster2 <- function (model,X,y,k,loss, ntree=NA) {
         distinct() %>%
         mutate(model = "Random Forest") -> accuracies
       
-      # append to estimates
-      estimates <- c(estimates, accuracy = list(accuracies))
+      # append to final_results
+      final_results <- c(final_results, accuracy = list(accuracies))
     } # end accuracies 
     
     # if roc
-    if("roc" %in% loss){
+    if("roc" %in% estimates){
       res %>%
         collect_predictions(parameters = best) %>%
         roc_curve(labels, `.pred_-1`) %>%
         mutate(model = "Random Forest") -> roc
       
-      # append to estimates 
-      estimates <- c(estimates, roc = list(roc))
+      # append to final_results 
+      final_results <- c(final_results, roc = list(roc))
       
     } # end roc 
     
     
+    
   } # end random forest 
-  else if (model == "lda") {
-
-
-    
-  } # end lda 
-  else if (model == "qda") {
-    
-  } # end qda 
-  else if (model == "rf_boost"){
+  else if (model == "boosted_trees"){
     
     # add more arguments?
     mod <- boost_tree(mtry = tune(), min_n = tune(), trees = 5) %>% 
@@ -177,7 +193,7 @@ CVmaster2 <- function (model,X,y,k,loss, ntree=NA) {
     # if accuracy
     if("accuracy" %in% loss){
       res %>% select_best("accuracy")  -> best
-
+      
       res %>%
         select(id, .metrics) %>%
         hoist(.metrics, mtry = "mtry", min_n = "min_n", metric = ".metric", estimate = ".estimate") %>%
@@ -194,21 +210,21 @@ CVmaster2 <- function (model,X,y,k,loss, ntree=NA) {
         select(id, mtry, min_n, metric, mean) %>%
         distinct() %>%
         mutate(model = "Boosted Trees") -> accuracies
-
-      # append to estimates
-      estimates <- c(estimates, accuracy = list(accuracies))
+      
+      # append to final_results
+      final_results <- c(final_results, accuracy = list(accuracies))
     } # end accuracies
-
+    
     # if roc
-    if("roc" %in% loss){
+    if("roc" %in% estimates){
       res %>%
         collect_predictions(parameters = best) %>%
         roc_curve(labels, `.pred_-1`) %>%
         mutate(model = "Boosted Trees") -> roc
-
-      # append to estimates
-      estimates <- c(estimates, roc = list(roc))
-
+      
+      # append to final_results
+      final_results <- c(final_results, roc = list(roc))
+      
     } # end roc
     
     
@@ -218,11 +234,19 @@ CVmaster2 <- function (model,X,y,k,loss, ntree=NA) {
     
     
   } # end boost 
+  else if (model == "lda") {
+
+
+    
+  } # end lda 
+  else if (model == "qda") {
+    
+  } # end qda 
   else {
     
   } # end svm 
   
-  # return(estimates)
+  return(final_results)
 }
 
 
