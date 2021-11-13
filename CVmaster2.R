@@ -1,4 +1,4 @@
-CVmaster2 <- function (model,X,y,k,loss, estimates, ntree=NA) {
+CVmaster2 <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
   require(tidyverse)
   require(tidymodels)
   require(workflows)
@@ -7,6 +7,7 @@ CVmaster2 <- function (model,X,y,k,loss, estimates, ntree=NA) {
   # require(caret)
   require(rsample)
   require(xgboost)
+  require(MASS)
   # require(parallel)
   
   # check if model in one of the options 
@@ -107,8 +108,8 @@ CVmaster2 <- function (model,X,y,k,loss, estimates, ntree=NA) {
       
       mean_cmat <- matrix(counts_per_resample$prop, byrow = TRUE, ncol = 2)
       mean_cmat <- data.frame(mean_cmat)
-      rownames(mean_cmat) <- paste0("predict_",levels(test_log$labels))
-      colnames(mean_cmat) <- paste0("truth_", levels(test_log$labels))
+      rownames(mean_cmat) <- paste0("predict_",levels(best_res$labels))
+      colnames(mean_cmat) <- paste0("truth_", levels(best_res$labels))
       
       # append to final_results 
       final_results <- c(final_results, conf_mat = list(mean_cmat))
@@ -202,8 +203,8 @@ CVmaster2 <- function (model,X,y,k,loss, estimates, ntree=NA) {
       
       mean_cmat <- matrix(counts_per_resample$prop, byrow = TRUE, ncol = 2)
       mean_cmat <- data.frame(mean_cmat)
-      rownames(mean_cmat) <- paste0("predict_",levels(test_log$labels))
-      colnames(mean_cmat) <- paste0("truth_", levels(test_log$labels))
+      rownames(mean_cmat) <- paste0("predict_",levels(best_res$labels))
+      colnames(mean_cmat) <- paste0("truth_", levels(best_res$labels))
       
       # append to final_results 
       final_results <- c(final_results, conf_mat = list(mean_cmat))
@@ -223,8 +224,7 @@ CVmaster2 <- function (model,X,y,k,loss, estimates, ntree=NA) {
     
   } # end random forest 
   else if (model == "boosted_trees"){
-    
-    # add more arguments?
+
     mod <- boost_tree(mtry = tune(), min_n = tune(), trees = 5) %>% 
       set_mode("classification") %>% 
       set_engine("xgboost")
@@ -297,8 +297,8 @@ CVmaster2 <- function (model,X,y,k,loss, estimates, ntree=NA) {
       
       mean_cmat <- matrix(counts_per_resample$prop, byrow = TRUE, ncol = 2)
       mean_cmat <- data.frame(mean_cmat)
-      rownames(mean_cmat) <- paste0("predict_",levels(test_log$labels))
-      colnames(mean_cmat) <- paste0("truth_", levels(test_log$labels))
+      rownames(mean_cmat) <- paste0("predict_",levels(best_res$labels))
+      colnames(mean_cmat) <- paste0("truth_", levels(best_res$labels))
       
       # append to final_results 
       final_results <- c(final_results, conf_mat = list(mean_cmat))
@@ -318,14 +318,204 @@ CVmaster2 <- function (model,X,y,k,loss, estimates, ntree=NA) {
     
   } # end boost 
   else if (model == "lda") {
-
-
+    folds <- caret::createFolds(y,k)
+    
+    # fit model for each fold, get predictions and accuracy 
+    fitModel <- function(i) {
+      trainx <- X_train_image[-folds[[i]],]
+      trainy <- y_train_image[-folds[[i]]]
+      valx <- X_train_image[folds[[i]],]
+      valy <- y_train_image[folds[[i]]]
+      
+      train_data <- bind_cols(y = trainy, trainx)
+      res <- lda(y ~ ., data = train_data)
+      
+      preds <- predict(res, valx)
+      data.frame(folds = i, preds) %>%
+        bind_cols(truth = valy) -> preds
+      
+      #accuracy per fold
+      preds %>%
+        accuracy(truth, class) -> accuracy
+      
+      return(list(preds = preds, accuracy = accuracy$.estimate))
+    }
+    
+    # call function for each fold 
+    folds_res <- map(seq(k),
+                     function(i) {
+                       fitModel(i)
+                     })
+    
+    # aggregate accuracies 
+    if("accuracy" %in% loss){
+      accuracies <- map(seq(k), function(i){
+        folds_res[[i]]$accuracy
+      })
+      
+      accuracies <- data.frame(folds = seq(k), accuracy = unlist(accuracies))
+      # append to final_results 
+      final_results <- c(final_results, accuracy = list(accuracies))
+    } # end accuracy 
+    
+    # combine predictions 
+    preds <- map(seq(k), function(i){
+      folds_res[[i]]$preds
+    })
+    preds <- reduce(preds, bind_rows) 
+    
+    if("roc" %in% estimates){
+      # calc roc
+      preds %>%
+        roc_curve(truth, `posterior..1`) -> roc
+      
+      # append to final_results 
+      final_results <- c(final_results, roc = list(roc))
+    } # end roc
+    
+    if("conf_mat" %in% estimates){
+      # conf matrix 
+      preds %>%
+        group_by(folds) %>%
+        conf_mat(truth, class) %>%
+        mutate(tidied = map(conf_mat, tidy)) %>%
+        unnest(tidied) -> cells_per_resample
+      
+      counts_per_resample <- preds %>%
+        group_by(folds) %>%
+        summarize(total = n()) %>%
+        left_join(cells_per_resample, by = "folds") %>%
+        mutate(prop = value/total) %>%
+        group_by(name) %>%
+        summarize(prop = mean(prop))
+      
+      mean_cmat <- matrix(counts_per_resample$prop, byrow = TRUE, ncol = 2)
+      mean_cmat <- data.frame(mean_cmat)
+      rownames(mean_cmat) <- paste0("predict_",levels(preds$truth))
+      colnames(mean_cmat) <- paste0("truth_", levels(preds$truth))
+      
+      # append to final_results 
+      final_results <- c(final_results, conf_mat = list(mean_cmat))
+    } # end conf mat
+  
+    # if precision
+    if("precision" %in% estimates){
+      precision <- mean_cmat["predict_1", "truth_1"] / 
+        (mean_cmat["predict_1", "truth_1"] + mean_cmat["predict_1", "truth_-1"])
+      
+      # append to final_results 
+      final_results <- c(final_results, precision = list(precision))
+    } # end precision
     
   } # end lda 
   else if (model == "qda") {
+    folds <- caret::createFolds(y,k)
+    
+    # fit model for each fold, get predictions and accuracy 
+    fitModel <- function(i) {
+      trainx <- X_train_image[-folds[[i]],]
+      trainy <- y_train_image[-folds[[i]]]
+      valx <- X_train_image[folds[[i]],]
+      valy <- y_train_image[folds[[i]]]
+      
+      train_data <- bind_cols(y = trainy, trainx)
+      res <- qda(y ~ ., data = train_data)
+      
+      preds <- predict(res, valx)
+      data.frame(folds = i, preds) %>%
+        bind_cols(truth = valy) -> preds
+      
+      #accuracy per fold
+      preds %>%
+        accuracy(truth, class) -> accuracy
+      
+      return(list(preds = preds, accuracy = accuracy$.estimate))
+    }
+    
+    # call function for each fold 
+    folds_res <- map(seq(k),
+                     function(i) {
+                       fitModel(i)
+                     })
+    
+    if("accuracy" %in% loss){
+      # aggregate accuracies 
+      accuracies <- map(seq(k), function(i){
+        folds_res[[i]]$accuracy
+      })
+      
+      accuracies <- data.frame(folds = seq(k), accuracy = unlist(accuracies))
+      # append to final_results 
+      final_results <- c(final_results, accuracies = list(accuracies))
+    } # end accuracy 
+    
+    # combine predictions 
+    preds <- map(seq(k), function(i){
+      folds_res[[i]]$preds
+    })
+    preds <- reduce(preds, bind_rows) 
+    
+    
+    if("roc" %in% estimates){
+      # calc roc
+      preds %>%
+        roc_curve(truth, `posterior..1`) -> roc
+      
+      # append to final_results 
+      final_results <- c(final_results, roc = list(roc))
+    } # end roc
+    
+    if("conf_mat" %in% estimates){
+      # conf matrix 
+      preds %>%
+        group_by(folds) %>%
+        conf_mat(truth, class) %>%
+        mutate(tidied = map(conf_mat, tidy)) %>%
+        unnest(tidied) -> cells_per_resample
+      
+      counts_per_resample <- preds %>%
+        group_by(folds) %>%
+        summarize(total = n()) %>%
+        left_join(cells_per_resample, by = "folds") %>%
+        mutate(prop = value/total) %>%
+        group_by(name) %>%
+        summarize(prop = mean(prop))
+      
+      mean_cmat <- matrix(counts_per_resample$prop, byrow = TRUE, ncol = 2)
+      mean_cmat <- data.frame(mean_cmat)
+      rownames(mean_cmat) <- paste0("predict_",levels(preds$truth))
+      colnames(mean_cmat) <- paste0("truth_", levels(preds$truth))
+      
+      # append to final_results 
+      final_results <- c(final_results, conf_mat = list(mean_cmat))
+    } # end conf mat
+    
+    # if precision
+    if("precision" %in% estimates){
+      precision <- mean_cmat["predict_1", "truth_1"] / 
+        (mean_cmat["predict_1", "truth_1"] + mean_cmat["predict_1", "truth_-1"])
+      
+      # append to final_results 
+      final_results <- c(final_results, precision = list(precision))
+    } # end precision
     
   } # end qda 
   else {
+    mod <- svm_poly(cost = tune(), degree = tune()) %>% 
+      set_mode("classification") %>% 
+      set_engine("kernlab")
+    
+    workflow <- workflow() %>%
+      add_model(mod) %>%
+      add_formula(labels ~.)
+    
+    ## CHANGE TO 25 TO RUN AT END
+    res <- workflow %>%
+      tune_grid(grid = 5, 
+                control = control_grid(save_pred = TRUE),
+                resamples = folds)
+    
+    return(res)
     
   } # end svm 
   

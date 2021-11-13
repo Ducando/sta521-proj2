@@ -406,13 +406,27 @@ image_rf <- CVmaster2(model = "rf",
 
 # BOOSTED TREES 
 image_boost <- CVmaster2(model = "boosted_trees", 
-                         X = X_train_blocks, y = y_train_blocks,
+                         X = X_train_image, y = y_train_image,
+                         k = 10, loss = c("accuracy"), 
+                         estimates = c("roc", "conf_mat", "precision")) 
+
+
+# LDA 
+image_lda <- CVmaster2(model = "lda", 
+                         X = X_train_image, y = y_train_image,
+                         k = 10, loss = c("accuracy"), 
+                         estimates = c("roc", "conf_mat", "precision")) 
+# QDA 
+image_qda <- CVmaster2(model = "qda", 
+                         X = X_train_image, y = y_train_image,
                          k = 10, loss = c("accuracy"), 
                          estimates = c("roc", "conf_mat", "precision")) 
 
 # SVM 
-# LDA 
-# QDA 
+image_svm <- CVmaster2(model = "svm", 
+                         X = X_train_image, y = y_train_image,
+                         k = 10, loss = c("accuracy"), 
+                         estimates = c("roc", "conf_mat", "precision")) 
 
 
 
@@ -433,11 +447,112 @@ block_boost <- CVmaster2(model = "boosted_trees",
                          X = X_train_blocks, y = y_train_blocks,
                          k = 10, loss = c("accuracy"), 
                          estimates = c("roc", "conf_mat", "precision")) 
+# LDA 
+block_lda <- CVmaster2(model = "lda", 
+                         X = X_train_blocks, y = y_train_blocks,
+                         k = 10, loss = c("accuracy"), 
+                         estimates = c("roc", "conf_mat", "precision")) 
+# QDA 
+block_qda <- CVmaster2(model = "qda", 
+                         X = X_train_blocks, y = y_train_blocks,
+                         k = 10, loss = c("accuracy"), 
+                         estimates = c("roc", "conf_mat", "precision")) 
 
 # SVM 
-# LDA 
-# QDA 
 ```
+
+```{r}
+folds <- caret::createFolds(y_train_image,5)
+costs <- seq(0.1, 15, length.out = 5)
+degrees <- seq(5)
+
+# fit model for each fold, and each get predictions and accuracy 
+fitModel <- function(i) {
+  trainx <- X_train_image[-folds[[i]],]
+  trainy <- y_train_image[-folds[[i]]]
+  valx <- X_train_image[folds[[i]],]
+  valy <- y_train_image[folds[[i]]]
+  
+  train_data <- bind_cols(y = trainy, trainx)
+  
+  # for each cost, degree 
+  for (cost in costs) {
+    for (degree in degrees) {
+      res <- lda(y ~ ., data = train_data)
+      svm
+      preds <- predict(res, valx)
+      data.frame(folds = i, preds) %>%
+        bind_cols(truth = valy) -> preds
+      
+      #accuracy per fold
+      preds %>%
+        accuracy(truth, class) -> accuracy
+      
+      return(list(preds = preds, accuracy = accuracy$.estimate))
+    }
+  }
+  
+  
+}
+
+# call function for each fold 
+folds_res <- map(seq(5),
+    function(i) {
+      fitModel(i)
+    })
+
+# aggregate accuracies 
+accuracies <- map(seq(5), function(i){
+  folds_res[[i]]$accuracy
+})
+
+accuracies <- data.frame(folds = seq(5), accuracy = unlist(accuracies))
+
+
+# combine predictions 
+preds <- map(seq(5), function(i){
+  folds_res[[i]]$preds
+})
+
+preds <- reduce(preds, bind_rows) 
+
+
+# how to find roc 
+preds %>%
+  roc_curve(truth, `posterior..1`) -> roc
+
+
+# conf matrix 
+preds %>%
+        group_by(folds) %>%
+        conf_mat(truth, class) %>%
+        mutate(tidied = map(conf_mat, tidy)) %>%
+        unnest(tidied) -> cells_per_resample
+      
+      counts_per_resample <- preds %>%
+        group_by(folds) %>%
+        summarize(total = n()) %>%
+        left_join(cells_per_resample, by = "folds") %>%
+        mutate(prop = value/total) %>%
+        group_by(name) %>%
+        summarize(prop = mean(prop))
+      
+      mean_cmat <- matrix(counts_per_resample$prop, byrow = TRUE, ncol = 2)
+      mean_cmat <- data.frame(mean_cmat)
+      rownames(mean_cmat) <- paste0("predict_",levels(preds$truth))
+      colnames(mean_cmat) <- paste0("truth_", levels(preds$truth))
+      
+# precision 
+      precision <- mean_cmat["predict_1", "truth_1"] / 
+        (mean_cmat["predict_1", "truth_1"] + mean_cmat["predict_1", "truth_-1"])
+      
+      image_lda
+
+```
+
+
+
+
 
 ```{r}
 # image_log %>%
@@ -473,10 +588,14 @@ block_boost <- CVmaster2(model = "boosted_trees",
 image_log$accuracy %>%
   bind_rows(image_rf$accuracy) %>%
   bind_rows(image_boost$accuracy) %>%
+  # bind_rows(image_lda$accuracy) %>%
+  # bind_rows(image_qda$accuracy) %>%
   mutate(type = "Image") %>%
   bind_rows(block_log$accuracy) %>%
   bind_rows(block_rf$accuracy) %>%
   bind_rows(block_boost$accuracy) %>%
+  # bind_rows(block_lda$accuracy) %>%
+  # bind_rows(block_qda$accuracy) %>%
   mutate(type = ifelse(is.na(type), "Block", type)) %>%
   group_by(type,model) %>%
   rename(accuracy = mean) %>%
