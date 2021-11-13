@@ -411,7 +411,7 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
     } # end precision
     
   } # end lda 
-  else if (model == "qda") {
+  else {
     folds <- caret::createFolds(y,k)
     
     # fit model for each fold, get predictions and accuracy 
@@ -503,25 +503,6 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
     } # end precision
     
   } # end qda 
-  else {
-    break
-    # mod <- svm_poly(cost = tune(), degree = tune()) %>% 
-    #   set_mode("classification") %>% 
-    #   set_engine("kernlab")
-    # 
-    # workflow <- workflow() %>%
-    #   add_model(mod) %>%
-    #   add_formula(labels ~.)
-    # 
-    # ## CHANGE TO 25 TO RUN AT END
-    # res <- workflow %>%
-    #   tune_grid(grid = 5, 
-    #             control = control_grid(save_pred = TRUE),
-    #             resamples = folds)
-    # 
-    # return(res)
-    
-  } # end svm 
   
   return(final_results)
 }
