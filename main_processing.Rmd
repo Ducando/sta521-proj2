@@ -588,19 +588,198 @@ lda_tester %>%
 ```
 
 
+## Section 4
+```{r}
+rf_train_image <- train_image %>%
+  filter(expert != 0) %>%
+  select(-y_coord, -x_coord, -expert_text)
+
+rf_val_image <- val_image %>%
+  filter(expert != 0) %>%
+  select(-y_coord, -x_coord, -expert_text)
+```
 
 
+```{r}
+## image data
+#
+#rf <- rand_forest(mtry = tune(), min_n = tune(), trees = 50) %>%
+#  set_engine("ranger") %>%
+#  set_mode("classification")
+#    
+#rf_recipe <- recipe(expert ~., data = rf_train_image)
+#
+#workflow <- workflow() %>%
+#  add_recipe(rf_recipe) %>%
+#  add_model(rf) 
+#    
+#res <- workflow %>%
+#  tune_grid(rf_val_image,X_valgrid = 25, 
+#            control = control_grid(save_pred = TRUE))
+#
+#workflow %>%
+#  tune_grid(rf_val_image, grid = 25, 
+#            control = control_grid(save_pred = TRUE))
+```
+```{r}
+library(ranger)
+```
 
 
+```{r}
+#mtrys <- 1:8
+#min_ns <- 1:10
+
+mtrys <- 1:8
+min_ns <- 1:10
+
+image_acc <- matrix(NA,nrow=length(mtrys),ncol=length(min_ns))
+for (i in seq_along(mtrys)){
+  for (j in seq_along(min_ns)){
+    mod <- ranger(expert ~., data = rf_train_image,mtry = mtrys[i], min_n = min_ns[j], trees = 50)
+    preds <- predict(mod,data=rf_val_image)
+    image_acc[i,j] <- mean(rf_val_image$expert==preds$predictions)
+  }
+}
+```
 
 
+```{r}
+rf_train_block <- train %>%
+  filter(expert != 0) %>%
+  select(-y_coord, -x_coord, -expert_text)
 
+rf_val_block <- val %>%
+  filter(expert != 0) %>%
+  select(-y_coord, -x_coord, -expert_text)
 
+rf_test_block <- test %>%
+  filter(expert != 0) %>%
+  select(-y_coord, -x_coord, -expert_text)
+```
 
+```{r}
+mtrys <- 1:8
+min_ns <- 1:10
 
+block_acc <- matrix(NA,nrow=length(mtrys),ncol=length(min_ns))
+for (i in seq_along(mtrys)){
+  for (j in seq_along(min_ns)){
+    mod <- ranger(expert ~., data = rf_train_block,mtry = mtrys[i], min_n = min_ns[j], trees = 50)
+    preds <- predict(mod,data=rf_val_block)
+    block_acc[i,j] <- mean(rf_val_block$expert==preds$predictions)
+  }
+}
+```
 
+```{r}
+plot(1:8,apply(block_acc,1,mean),type="l",col="#56B1F7",xlim=c(1,10))
+lines(1:10,apply(block_acc,2,mean),col="#132B43")
+```
+Based on this, picking 4 for both mtry and min_n (0.9138478)
 
+```{r}
+rf_mod <- ranger(expert ~., data = rf_train_block,mtry = 4, min_n = 4, trees = 100)
+preds <- predict(mod,data=rf_val_block)
+mean(rf_val_block$expert==preds$predictions)
+```
 
+```{r}
+rf_mod <- ranger(expert ~., data = rf_train_block,mtry = 4, min_n = 4, trees = 500)
+preds <- predict(mod,data=rf_val_block)
+mean(rf_val_block$expert==preds$predictions)
+```
 
+Increasing number of trees does not significantly change predictions
+
+```{r}
+set.seed(513)
+final_mod <- ranger(expert ~., data = rf_train_block,mtry = 4, min_n = 4, trees = 50,importance = 'impurity')
+val_preds <- predict(final_mod,data=rf_val_block)
+mean(rf_val_block$expert==val_preds$predictions)
+
+test_preds <- predict(final_mod,data=rf_test_block)
+mean(rf_test_block$expert==test_preds$predictions)
+```
+
+```{r}
+final_mod_prob <- ranger(expert ~., data = rf_train_block,mtry = 4, min_n = 4, trees = 50,probability = TRUE)
+test_prob_preds <- predict(final_mod_prob,data=rf_test_block)
+```
+
+```{r}
+var_imp <- tibble(variable=names(final_mod$variable.importance),importance = final_mod$variable.importance)
+
+ ggplot(var_imp, aes(x=reorder(variable,importance), y=importance,fill=importance))+ 
+      geom_bar(stat="identity", position="dodge")+ coord_flip()+
+      ylab("Variable Importance")+
+      xlab("")+
+      guides(fill=F)
+```
+```{r}
+image_1_data <- imagem1 %>%
+  select(-y_coord, -x_coord, -expert_text)
+image_1_class <- predict(final_mod,data=image_1_data)$predictions
+image_1_pred_class <- tibble(x_coord = imagem1$x_coord, y_coord = imagem1$y_coord, class = image_1_class)
+ggplot(image_1_pred_class, aes(x_coord,y_coord, fill = class)) + 
+     geom_raster()+ scale_fill_manual(values = c("#132B43", "#56B1F7"))
+
+image_1_preds <- predict(final_mod_prob,data=image_1_data)$predictions
+image_1_probs <- tibble(x_coord = imagem1$x_coord, y_coord = imagem1$y_coord, prob = image_1_preds[,2])
+ggplot(image_1_probs, aes(x_coord,y_coord, fill = prob)) + 
+     geom_raster()
+```
+
+```{r}
+image_2_data <- imagem2 %>%
+  select(-y_coord, -x_coord, -expert_text)
+image_2_class <- predict(final_mod,data=image_2_data)$predictions
+image_2_pred_class <- tibble(x_coord = imagem2$x_coord, y_coord = imagem2$y_coord, class = image_2_class)
+ggplot(image_2_pred_class, aes(x_coord,y_coord, fill = class)) + 
+     geom_raster()+scale_fill_manual(values = c("#132B43", "#56B1F7"))
+
+image_2_preds <- predict(final_mod_prob,data=image_2_data)$predictions
+image_2_probs <- tibble(x_coord = imagem2$x_coord, y_coord = imagem2$y_coord, prob = image_2_preds[,2])
+ggplot(image_2_probs, aes(x_coord,y_coord, fill = prob)) + 
+     geom_raster()
+```
+
+```{r}
+image_3_data <- imagem3 %>%
+  select(-y_coord, -x_coord, -expert_text)
+image_3_class <- predict(final_mod,data=image_3_data)$predictions
+image_3_pred_class <- tibble(x_coord = imagem3$x_coord, y_coord = imagem3$y_coord, class = image_3_class)
+ggplot(image_3_pred_class, aes(x_coord,y_coord, fill = class)) + 
+     geom_raster()+ scale_fill_manual(values = c("#132B43", "#56B1F7"))
+
+image_3_preds <- predict(final_mod_prob,data=image_3_data)$predictions
+image_3_probs <- tibble(x_coord = imagem3$x_coord, y_coord = imagem3$y_coord, prob = image_3_preds[,2])
+ggplot(image_3_probs, aes(x_coord,y_coord, fill = prob)) + 
+     geom_raster()
+```
+
+```{r}
+image_1_pred_class <- image_1_pred_class %>%
+  mutate(misclassified = ifelse(imagem1$expert != 0 & class != imagem1$expert,1,0))
+
+ggplot(image_1_pred_class, aes(x_coord,y_coord, fill = misclassified)) + 
+     geom_raster()
+```
+
+```{r}
+image_2_pred_class <- image_2_pred_class %>%
+  mutate(misclassified = ifelse(imagem2$expert != 0 & class != imagem2$expert,1,0))
+
+ggplot(image_2_pred_class, aes(x_coord,y_coord, fill = misclassified)) + 
+     geom_raster()
+```
+
+```{r}
+image_3_pred_class <- image_3_pred_class %>%
+  mutate(misclassified = ifelse(imagem3$expert != 0 & class != imagem3$expert,1,0))
+
+ggplot(image_3_pred_class, aes(x_coord,y_coord, fill = misclassified)) + 
+     geom_raster()
+```
 
 
