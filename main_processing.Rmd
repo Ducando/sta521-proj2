@@ -334,10 +334,16 @@ See the CVmaster.R script.
 #### Part A
 
 ```{r}
+# X_train_image <- train_image %>%
+#   bind_rows(val_image) %>%
+#   filter(expert != 0) %>%
+#   select(ndai,sd,corr)
+
 X_train_image <- train_image %>%
   bind_rows(val_image) %>%
   filter(expert != 0) %>%
-  select(ndai,sd,corr)
+  select(-y_coord, -x_coord, -expert_text, -expert)
+
 y_train_image  <- train_image %>%
   bind_rows(val_image) %>%
   filter(expert!=0) %>%
@@ -347,10 +353,16 @@ y_train_image  <- train_image %>%
 
 
 ```{r}
+# X_train_blocks <- train %>%
+#   bind_rows(val) %>%
+#   filter(expert != 0) %>%
+#   select(ndai,sd,corr)
+
 X_train_blocks <- train %>%
   bind_rows(val) %>%
   filter(expert != 0) %>%
-  select(ndai,sd,corr)
+  select(-y_coord, -x_coord, -expert_text, -expert)
+
 y_train_blocks  <- train %>%
   bind_rows(val) %>%
   filter(expert!=0) %>%
@@ -382,15 +394,21 @@ First modelling by splitting the data by image and by block
 ## RUN IMAGE MODELS 
 
 # LOGISTIC 
-image_log <- CVmaster2(model = "logistic", X = X_train_image, y =y_train_image, 
-                       k = 10, loss = c("accuracy"), estimates = c("roc", "conf_mat"))
+image_log <- CVmaster2(model = "logistic", 
+                       X = X_train_image, y =y_train_image, 
+                       k = 10, loss = c("accuracy"), 
+                       estimates = c("roc", "conf_mat", "precision"))
 # RF
-image_rf <- CVmaster2(model = "rf", X = X_train_image, y = y_train_image ,
-                      k = 10, loss = c("accuracy"), estimates = c("roc", "conf_mat"))
+image_rf <- CVmaster2(model = "rf",
+                      X = X_train_image, y = y_train_image,
+                      k = 10, loss = c("accuracy"), 
+                      estimates = c("roc", "conf_mat", "precision"))
 
 # BOOSTED TREES 
-image_boost <- CVmaster2(model = "boosted_trees", X = X_train_blocks, y = y_train_blocks ,
-                      k = 10, loss = c("accuracy"), estimates = c("roc", "conf_mat")) 
+image_boost <- CVmaster2(model = "boosted_trees", 
+                         X = X_train_blocks, y = y_train_blocks,
+                         k = 10, loss = c("accuracy"), 
+                         estimates = c("roc", "conf_mat", "precision")) 
 
 # SVM 
 # LDA 
@@ -400,15 +418,21 @@ image_boost <- CVmaster2(model = "boosted_trees", X = X_train_blocks, y = y_trai
 
 ## RUN BLOCK MODELS 
 # LOGISTIC 
-block_log <- CVmaster2(model = "logistic", X = X_train_blocks, y =y_train_blocks, 
-                       k = 10, loss = c("accuracy"), estimates = c("roc", "conf_mat"))
+block_log <- CVmaster2(model = "logistic", 
+                       X = X_train_blocks, y =y_train_blocks, 
+                       k = 10, loss = c("accuracy"), 
+                       estimates = c("roc", "conf_mat", "precision"))
 # RF
-block_rf <- CVmaster2(model = "rf", X = X_train_blocks, y = y_train_blocks ,
-                      k = 10, loss = c("accuracy"), estimates = c("roc", "conf_mat"))
+block_rf <- CVmaster2(model = "rf", 
+                      X = X_train_blocks, y = y_train_blocks,
+                      k = 10, loss = c("accuracy"), 
+                      estimates = c("roc", "conf_mat", "precision"))
 
 # BOOSTED TREES 
-block_boost <- CVmaster2(model = "boosted_trees", X = X_train_blocks, y = y_train_blocks ,
-                      k = 10, loss = c("accuracy"), estimates = c("roc", "conf_mat")) 
+block_boost <- CVmaster2(model = "boosted_trees", 
+                         X = X_train_blocks, y = y_train_blocks,
+                         k = 10, loss = c("accuracy"), 
+                         estimates = c("roc", "conf_mat", "precision")) 
 
 # SVM 
 # LDA 
@@ -472,7 +496,7 @@ image_log$accuracy %>%
 
 image_log$roc %>%
   bind_rows(image_rf$roc) %>%
-  bind_rows(image_boost$roc) +
+  bind_rows(image_boost$roc) %>%
   ggplot(aes(x = 1 - specificity, y = sensitivity, col = model)) + 
   geom_path(lwd = 0.5, alpha = 0.6) +
   geom_abline(lty = 3) + 
@@ -496,7 +520,8 @@ image_log$roc %>%
 ```{r}
 ## PRECISION ESTIMATES 
 
-## PLOTTING PREDICTIONS BY COORDS 
+## CONF MATRIX
+
 ```
 
 

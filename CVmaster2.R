@@ -106,13 +106,24 @@ CVmaster2 <- function (model,X,y,k,loss, estimates, ntree=NA) {
         summarize(prop = mean(prop))
       
       mean_cmat <- matrix(counts_per_resample$prop, byrow = TRUE, ncol = 2)
-      rownames(mean_cmat) <- levels(test_log$labels)
-      colnames(mean_cmat) <- levels(test_log$labels)
+      mean_cmat <- data.frame(mean_cmat)
+      rownames(mean_cmat) <- paste0("predict_",levels(test_log$labels))
+      colnames(mean_cmat) <- paste0("truth_", levels(test_log$labels))
       
       # append to final_results 
       final_results <- c(final_results, conf_mat = list(mean_cmat))
       
     } # end conf_mat
+    
+    # if precision
+    if("precision" %in% estimates){
+      # TP / (TP + FP)
+      precision <- mean_cmat["predict_1", "truth_1"] / 
+        (mean_cmat["predict_1", "truth_1"] + mean_cmat["predict_1", "truth_-1"])
+      
+      # append to final_results 
+      final_results <- c(final_results, precision = list(precision))
+    } # end precision
     
   } # end logistic 
   else if (model == "rf") {
