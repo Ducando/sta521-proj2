@@ -1,14 +1,12 @@
-CVmaster2 <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
+CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
   require(tidyverse)
   require(tidymodels)
   require(workflows)
   require(tune)
   require(tibble)
-  # require(caret)
   require(rsample)
   require(xgboost)
   require(MASS)
-  # require(parallel)
   
   # check if model in one of the options 
   model_options <- c("lda","qda","rf","logistic","svm", "boosted_trees")
@@ -18,6 +16,11 @@ CVmaster2 <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
   }
   
   # check if loss/estimates is in the options 
+  loss_functions <- c("accuracy")
+  if(!(loss %in% loss_functions)){
+    message("Model not available, please choose from: accuracy")
+    break
+  }
   
   # split data into folds 
   data <- bind_cols(X, labels = y)
@@ -501,21 +504,22 @@ CVmaster2 <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
     
   } # end qda 
   else {
-    mod <- svm_poly(cost = tune(), degree = tune()) %>% 
-      set_mode("classification") %>% 
-      set_engine("kernlab")
-    
-    workflow <- workflow() %>%
-      add_model(mod) %>%
-      add_formula(labels ~.)
-    
-    ## CHANGE TO 25 TO RUN AT END
-    res <- workflow %>%
-      tune_grid(grid = 5, 
-                control = control_grid(save_pred = TRUE),
-                resamples = folds)
-    
-    return(res)
+    break
+    # mod <- svm_poly(cost = tune(), degree = tune()) %>% 
+    #   set_mode("classification") %>% 
+    #   set_engine("kernlab")
+    # 
+    # workflow <- workflow() %>%
+    #   add_model(mod) %>%
+    #   add_formula(labels ~.)
+    # 
+    # ## CHANGE TO 25 TO RUN AT END
+    # res <- workflow %>%
+    #   tune_grid(grid = 5, 
+    #             control = control_grid(save_pred = TRUE),
+    #             resamples = folds)
+    # 
+    # return(res)
     
   } # end svm 
   
