@@ -10,7 +10,10 @@ library(tidyverse)
 library(viridis)
 library(GGally)
 library(tidymodels)
+# library(patchwork)
+library(ggpubr)
 source("CVmaster.R")
+options(scipen = 999)
 
 
 # graph theme object 
@@ -436,44 +439,64 @@ image_log$accuracy %>%
   bind_rows(block_boost$accuracy) %>%
   bind_rows(block_lda$accuracy) %>%
   bind_rows(block_qda$accuracy) %>%
-  mutate(type = ifelse(is.na(type), "Block", type)) %>%
+  mutate(type = ifelse(is.na(type), "Block", type)) -> model_sum
+
+model_sum %>%
+  dplyr::select(-mtry, -min_n, -penalty, -metric) %>%
   group_by(type,model) %>%
   rename(accuracy = mean) %>%
   mutate(mean_accuracy = mean(accuracy)) %>%
-  pivot_wider(names_from = id, values_from = accuracy) 
+  pivot_wider(names_from = id, values_from = accuracy) %>%
+  arrange(desc(mean_accuracy)) %>%
+  rename(`Mean Accuracy` = mean_accuracy)%>%
+  rename_with(str_to_title) -> model_accuracy_table
 
-# reformat the tuning parameter columns, take out metric, reorder, general formatting
+model_sum %>%
+  ungroup() %>%
+  dplyr::select(-metric, -mean, -id) %>%
+  distinct() %>%
+  rename(`Min Try` = mtry, 
+         `Min Nodes` = min_n) %>%
+  rename_with(str_to_title) %>%
+  # rename(`Min Nodes` = min_n) %>%
+  pivot_longer(cols = c(Penalty, `Min Try`, `Min Nodes`), names_to = "Parameter", values_to = "Value") %>%
+  mutate(Value = round(Value, 6)) %>%
+  filter(!is.na(Value))
 
   
 ```
 
 
 #### Part B 
-```{r}
+```{r fig.width=12, fig.height=6}
 ## GET ROC CURVES BY MODEL 
-
-image_log$roc %>%
+image_roc_plot <- image_log$roc %>%
   bind_rows(image_rf$roc) %>%
   bind_rows(image_boost$roc) %>%
   bind_rows(image_lda$roc) %>%
   bind_rows(image_qda$roc) %>%
   ggplot(aes(x = 1 - specificity, y = sensitivity, col = model)) + 
-  geom_path(lwd = 0.5, alpha = 0.6) +
+  geom_path(alpha = 0.6) +
   geom_abline(lty = 3) + 
-  coord_equal() 
+  coord_equal() +
+  theme_settings + 
+  labs(main = "Image ROC", x = "", y = "Sensitivity", col = "Model")
 
 
-  block_log$roc %>%
+block_roc_plot<-  block_log$roc %>%
   bind_rows(block_rf$roc) %>%
   bind_rows(block_boost$roc) %>%
     bind_rows(block_lda$roc) %>%
   bind_rows(block_qda$roc) %>%
   ggplot(aes(x = 1 - specificity, y = sensitivity, col = model)) + 
-  geom_path(lwd = 0.5, alpha = 0.6) +
+  geom_path(alpha = 0.6) +
   geom_abline(lty = 3) + 
-  coord_equal() 
+  coord_equal() + 
+  theme_settings +
+  labs(main = "Block ROC", x = "1 - Specificity", y = "Sensitivity", col = "Model")
 
 # change colors, linetype, size
+image_roc_plot + block_roc_plot + plot_layout(guides = "collect")
 
 ```
 
