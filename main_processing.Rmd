@@ -11,7 +11,6 @@ library(viridis)
 library(GGally)
 library(tidymodels)
 source("CVmaster.R")
-source("CVmaster2.R")
 
 
 # graph theme object 
@@ -334,11 +333,7 @@ See the CVmaster.R script.
 #### Part A
 
 ```{r}
-# X_train_image <- train_image %>%
-#   bind_rows(val_image) %>%
-#   filter(expert != 0) %>%
-#   select(ndai,sd,corr)
-
+# get x and y train data for each data split
 X_train_image <- train_image %>%
   bind_rows(val_image) %>%
   filter(expert != 0) %>%
@@ -349,14 +344,6 @@ y_train_image  <- train_image %>%
   filter(expert!=0) %>%
   .$expert %>%
   droplevels()
-```
-
-
-```{r}
-# X_train_blocks <- train %>%
-#   bind_rows(val) %>%
-#   filter(expert != 0) %>%
-#   select(ndai,sd,corr)
 
 X_train_blocks <- train %>%
   bind_rows(val) %>%
@@ -371,216 +358,69 @@ y_train_blocks  <- train %>%
 ```
 
 
-```{r}
-# returns one row for each fold across number of folds
-
-# some function to loop through folds, returns list of mses
-# loop_folds <- function(model, x, y, max_folds, loss, ntree = NA) {
-#   
-#   mses <- tibble()
-#   
-#   for (folds in seq(from =2, to = max_folds, by = 1)){
-#     results <- CVmaster(model, x, y, folds, loss, ntree)
-#     mses <- bind_rows(mses, c(num_folds = folds, fold = list(seq_len(folds)), val_error = list(results)))
-#     message(sprintf("Finished for %.0f folds\n", folds))
-#   }
-#   
-#   return(mses)
-# }
-```
-
 First modelling by splitting the data by image and by block 
 ```{r}
 ## RUN IMAGE MODELS 
 
 # LOGISTIC 
-image_log <- CVmaster2(model = "logistic", 
+image_log <- CVmaster(model = "logistic", 
                        X = X_train_image, y =y_train_image, 
                        k = 10, loss = c("accuracy"), 
                        estimates = c("roc", "conf_mat", "precision"))
+
 # RF
-image_rf <- CVmaster2(model = "rf",
+image_rf <- CVmaster(model = "rf",
                       X = X_train_image, y = y_train_image,
                       k = 10, loss = c("accuracy"), 
                       estimates = c("roc", "conf_mat", "precision"))
 
 # BOOSTED TREES 
-image_boost <- CVmaster2(model = "boosted_trees", 
+image_boost <- CVmaster(model = "boosted_trees", 
                          X = X_train_image, y = y_train_image,
                          k = 10, loss = c("accuracy"), 
                          estimates = c("roc", "conf_mat", "precision")) 
 
 
 # LDA 
-image_lda <- CVmaster2(model = "lda", 
+image_lda <- CVmaster(model = "lda", 
                          X = X_train_image, y = y_train_image,
                          k = 10, loss = c("accuracy"), 
                          estimates = c("roc", "conf_mat", "precision")) 
 # QDA 
-image_qda <- CVmaster2(model = "qda", 
+image_qda <- CVmaster(model = "qda", 
                          X = X_train_image, y = y_train_image,
                          k = 10, loss = c("accuracy"), 
-                         estimates = c("roc", "conf_mat", "precision")) 
-
-# SVM 
-image_svm <- CVmaster2(model = "svm", 
-                         X = X_train_image, y = y_train_image,
-                         k = 10, loss = c("accuracy"), 
-                         estimates = c("roc", "conf_mat", "precision")) 
-
+                         estimates = c("roc", "conf_mat", "precision"))
 
 
 ## RUN BLOCK MODELS 
 # LOGISTIC 
-block_log <- CVmaster2(model = "logistic", 
+block_log <- CVmaster(model = "logistic", 
                        X = X_train_blocks, y =y_train_blocks, 
                        k = 10, loss = c("accuracy"), 
                        estimates = c("roc", "conf_mat", "precision"))
 # RF
-block_rf <- CVmaster2(model = "rf", 
+block_rf <- CVmaster(model = "rf", 
                       X = X_train_blocks, y = y_train_blocks,
                       k = 10, loss = c("accuracy"), 
                       estimates = c("roc", "conf_mat", "precision"))
 
 # BOOSTED TREES 
-block_boost <- CVmaster2(model = "boosted_trees", 
+block_boost <- CVmaster(model = "boosted_trees", 
                          X = X_train_blocks, y = y_train_blocks,
                          k = 10, loss = c("accuracy"), 
                          estimates = c("roc", "conf_mat", "precision")) 
 # LDA 
-block_lda <- CVmaster2(model = "lda", 
+block_lda <- CVmaster(model = "lda", 
                          X = X_train_blocks, y = y_train_blocks,
                          k = 10, loss = c("accuracy"), 
                          estimates = c("roc", "conf_mat", "precision")) 
 # QDA 
-block_qda <- CVmaster2(model = "qda", 
+block_qda <- CVmaster(model = "qda", 
                          X = X_train_blocks, y = y_train_blocks,
                          k = 10, loss = c("accuracy"), 
                          estimates = c("roc", "conf_mat", "precision")) 
-
-# SVM 
 ```
-
-```{r}
-folds <- caret::createFolds(y_train_image,5)
-costs <- seq(0.1, 15, length.out = 5)
-degrees <- seq(5)
-
-# fit model for each fold, and each get predictions and accuracy 
-fitModel <- function(i) {
-  trainx <- X_train_image[-folds[[i]],]
-  trainy <- y_train_image[-folds[[i]]]
-  valx <- X_train_image[folds[[i]],]
-  valy <- y_train_image[folds[[i]]]
-  
-  train_data <- bind_cols(y = trainy, trainx)
-  
-  # for each cost, degree 
-  for (cost in costs) {
-    for (degree in degrees) {
-      res <- lda(y ~ ., data = train_data)
-      svm
-      preds <- predict(res, valx)
-      data.frame(folds = i, preds) %>%
-        bind_cols(truth = valy) -> preds
-      
-      #accuracy per fold
-      preds %>%
-        accuracy(truth, class) -> accuracy
-      
-      return(list(preds = preds, accuracy = accuracy$.estimate))
-    }
-  }
-  
-  
-}
-
-# call function for each fold 
-folds_res <- map(seq(5),
-    function(i) {
-      fitModel(i)
-    })
-
-# aggregate accuracies 
-accuracies <- map(seq(5), function(i){
-  folds_res[[i]]$accuracy
-})
-
-accuracies <- data.frame(folds = seq(5), accuracy = unlist(accuracies))
-
-
-# combine predictions 
-preds <- map(seq(5), function(i){
-  folds_res[[i]]$preds
-})
-
-preds <- reduce(preds, bind_rows) 
-
-
-# how to find roc 
-preds %>%
-  roc_curve(truth, `posterior..1`) -> roc
-
-
-# conf matrix 
-preds %>%
-        group_by(folds) %>%
-        conf_mat(truth, class) %>%
-        mutate(tidied = map(conf_mat, tidy)) %>%
-        unnest(tidied) -> cells_per_resample
-      
-      counts_per_resample <- preds %>%
-        group_by(folds) %>%
-        summarize(total = n()) %>%
-        left_join(cells_per_resample, by = "folds") %>%
-        mutate(prop = value/total) %>%
-        group_by(name) %>%
-        summarize(prop = mean(prop))
-      
-      mean_cmat <- matrix(counts_per_resample$prop, byrow = TRUE, ncol = 2)
-      mean_cmat <- data.frame(mean_cmat)
-      rownames(mean_cmat) <- paste0("predict_",levels(preds$truth))
-      colnames(mean_cmat) <- paste0("truth_", levels(preds$truth))
-      
-# precision 
-      precision <- mean_cmat["predict_1", "truth_1"] / 
-        (mean_cmat["predict_1", "truth_1"] + mean_cmat["predict_1", "truth_-1"])
-      
-      image_lda
-
-```
-
-
-
-
-
-```{r}
-# image_log %>%
-#   select_best() -> test_best
-# 
-# image_log %>%
-#         collect_predictions(parameters = test_best) -> test_log
-# 
-# test_log %>%
-# group_by(id) %>%
-#   conf_mat(labels, `.pred_class`) %>%
-#   mutate(tidied = map(conf_mat, tidy)) %>%
-#   unnest(tidied) -> cells_per_resample
-# 
-# counts_per_resample <- test_log %>%
-#   group_by(id) %>%
-#   summarize(total = n()) %>%
-#   left_join(cells_per_resample, by = "id") %>%
-#   mutate(prop = value/total) %>%
-#   group_by(name) %>%
-#   summarize(prop = mean(prop))
-# 
-# mean_cmat <- matrix(counts_per_resample$prop, byrow = TRUE, ncol = 2)
-# rownames(mean_cmat) <- levels(test_log$labels)
-# colnames(mean_cmat) <- levels(test_log$labels)
-```
-
-
 
 
 ```{r}
@@ -588,21 +428,20 @@ preds %>%
 image_log$accuracy %>%
   bind_rows(image_rf$accuracy) %>%
   bind_rows(image_boost$accuracy) %>%
-  # bind_rows(image_lda$accuracy) %>%
-  # bind_rows(image_qda$accuracy) %>%
+  bind_rows(image_lda$accuracy) %>%
+  bind_rows(image_qda$accuracy) %>%
   mutate(type = "Image") %>%
   bind_rows(block_log$accuracy) %>%
   bind_rows(block_rf$accuracy) %>%
   bind_rows(block_boost$accuracy) %>%
-  # bind_rows(block_lda$accuracy) %>%
-  # bind_rows(block_qda$accuracy) %>%
+  bind_rows(block_lda$accuracy) %>%
+  bind_rows(block_qda$accuracy) %>%
   mutate(type = ifelse(is.na(type), "Block", type)) %>%
   group_by(type,model) %>%
   rename(accuracy = mean) %>%
   mutate(mean_accuracy = mean(accuracy)) %>%
   pivot_wider(names_from = id, values_from = accuracy) 
 
-# add svm, lda, qda
 # reformat the tuning parameter columns, take out metric, reorder, general formatting
 
   
@@ -616,6 +455,8 @@ image_log$accuracy %>%
 image_log$roc %>%
   bind_rows(image_rf$roc) %>%
   bind_rows(image_boost$roc) %>%
+  bind_rows(image_lda$roc) %>%
+  bind_rows(image_qda$roc) %>%
   ggplot(aes(x = 1 - specificity, y = sensitivity, col = model)) + 
   geom_path(lwd = 0.5, alpha = 0.6) +
   geom_abline(lty = 3) + 
@@ -625,12 +466,13 @@ image_log$roc %>%
   block_log$roc %>%
   bind_rows(block_rf$roc) %>%
   bind_rows(block_boost$roc) %>%
+    bind_rows(block_lda$roc) %>%
+  bind_rows(block_qda$roc) %>%
   ggplot(aes(x = 1 - specificity, y = sensitivity, col = model)) + 
   geom_path(lwd = 0.5, alpha = 0.6) +
   geom_abline(lty = 3) + 
   coord_equal() 
 
-# add svm, qda, lda
 # change colors, linetype, size
 
 ```
@@ -644,67 +486,6 @@ image_log$precision
 
 ```
 
-
-
-```{r}
-# LDA 
-image_lda_accuracy <- CVmaster("lda", X_train_image , y_train_image ,10,"accuracy")
-# QDA
-image_qda_accuracy <- CVmaster("qda", X_train_image , y_train_image ,10,"accuracy")
-# LOGISTIC 
-image_log_accuracy <- CVmaster("logistic", X_train_image , y_train_image ,10,"accuracy")
-
-# RF
-image_rf_accuracy <- CVmaster("rf", X_train_image , y_train_image ,10,"accuracy",ntree=5)
-
-
-# fix table 
-# data.frame(type = "lda", acc = image_lda_accuracy, folds = 1:10) %>%
-#   bind_rows(data.frame(type = "qda", acc = image_qda_accuracy, folds = 1:10)) %>%
-#   bind_rows(data.frame(type = "log", acc = image_log_accuracy, folds = 1:10)) %>%
-#   group_by(type) %>%
-#   mutate(mean_acc = mean(acc)) %>%
-#   pivot_wider(names_from = folds, values_from = acc) -> image_accuracy_table
-```
-
-```{r}
-
-image_log_test <- CVmaster2(model = "logistic", X = X_train_image, y =y_train_image, 
-                       k = 10, loss = c("accuracy", "roc"))
-
-
-image_log_test$.metrics
-  
-block_boost$roc
-
-
-```
-
-Second way of splitting the data by blocks
-```{r}
-# LDA 
-block_lda_accuracy <- CVmaster("lda", X_train_blocks , y_train_blocks ,10,"accuracy")
-# QDA
-block_qda_accuracy <- CVmaster("qda", X_train_blocks , y_train_blocks ,10,"accuracy")
-# LOGISTIC 
-block_log_accuracy <- CVmaster("logistic", X_train_blocks , y_train_blocks ,10,"accuracy")
-# RF
-block_rf_accuracy <- CVmaster("rf", X_train_blocks , y_train_blocks ,10,"accuracy")
-
-# data.frame(type = "lda", acc = block_lda_accuracy, folds = 1:10) %>%
-#   bind_rows(data.frame(type = "qda", acc = block_qda_accuracy, folds = 1:10)) %>%
-#   bind_rows(data.frame(type = "log", acc = block_log_accuracy, folds = 1:10)) %>%
-#   group_by(type) %>%
-#   mutate(mean_acc = mean(acc)) %>%
-#   pivot_wider(names_from = folds, values_from = acc) -> block_accuracy_table
-
-library(plotROC)
-lda_tester <- CVmaster("lda", X_train_blocks , y_train_blocks, 10, "accuracy")
-
-lda_tester %>%
-  mutate(ylabels = as.integer(ylabels)) %>%
-  ggplot(aes(m = probs.1, d = ylabels)) + geom_roc( labels = FALSE)
-```
 
 
 ## Section 4

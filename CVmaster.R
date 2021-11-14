@@ -62,9 +62,9 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
       
       # get mean accuracy based on best paramater for each fold
       res %>%
-        select(id, .metrics) %>%
+        dplyr::select(id, .metrics) %>%
         hoist(.metrics, penalty = "penalty", metric = ".metric", estimate = ".estimate") %>%
-        select(-.metrics) %>%
+        dplyr::select(-.metrics) %>%
         unnest_longer(penalty) %>%
         filter(penalty == best$penalty) %>%
         unnest_longer(metric) %>%
@@ -72,7 +72,7 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
         unnest_longer(estimate) %>%
         group_by(id) %>%
         mutate(mean = mean(estimate)) %>%
-        select(id, penalty, metric, mean) %>%
+        dplyr::select(id, penalty, metric, mean) %>%
         distinct() %>%
         mutate(model = "Logistic Regression") -> accuracies
       
@@ -153,9 +153,9 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
       res %>% select_best("accuracy")  -> best
       
       res %>%
-        select(id, .metrics) %>%
+        dplyr::select(id, .metrics) %>%
         hoist(.metrics, mtry = "mtry", min_n = "min_n", metric = ".metric", estimate = ".estimate") %>%
-        select(-.metrics) %>%
+        dplyr::select(-.metrics) %>%
         unnest_longer(min_n) %>%
         filter(min_n == best$min_n) %>%
         unnest_longer(mtry) %>%
@@ -165,7 +165,7 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
         unnest_longer(estimate) %>%
         group_by(id) %>%
         mutate(mean = mean(estimate)) %>%
-        select(id, mtry, min_n, metric, mean) %>%
+        dplyr::select(id, mtry, min_n, metric, mean) %>%
         distinct() %>%
         mutate(model = "Random Forest") -> accuracies
       
@@ -247,9 +247,9 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
       res %>% select_best("accuracy")  -> best
       
       res %>%
-        select(id, .metrics) %>%
+        dplyr::select(id, .metrics) %>%
         hoist(.metrics, mtry = "mtry", min_n = "min_n", metric = ".metric", estimate = ".estimate") %>%
-        select(-.metrics) %>%
+        dplyr::select(-.metrics) %>%
         unnest_longer(min_n) %>%
         filter(min_n == best$min_n) %>%
         unnest_longer(mtry) %>%
@@ -259,7 +259,7 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
         unnest_longer(estimate) %>%
         group_by(id) %>%
         mutate(mean = mean(estimate)) %>%
-        select(id, mtry, min_n, metric, mean) %>%
+        dplyr::select(id, mtry, min_n, metric, mean) %>%
         distinct() %>%
         mutate(model = "Boosted Trees") -> accuracies
       
@@ -356,7 +356,7 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
         folds_res[[i]]$accuracy
       })
       
-      accuracies <- data.frame(folds = seq(k), accuracy = unlist(accuracies))
+      accuracies <- data.frame(id = paste0("Fold", str_pad(seq(k), 2, pad="0")), mean = unlist(accuracies), model = "LDA")
       # append to final_results 
       final_results <- c(final_results, accuracy = list(accuracies))
     } # end accuracy 
@@ -370,7 +370,8 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
     if("roc" %in% estimates){
       # calc roc
       preds %>%
-        roc_curve(truth, `posterior..1`) -> roc
+        roc_curve(truth, `posterior..1`) %>%
+        mutate(model = "LDA") -> roc
       
       # append to final_results 
       final_results <- c(final_results, roc = list(roc))
@@ -447,7 +448,7 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
         folds_res[[i]]$accuracy
       })
       
-      accuracies <- data.frame(folds = seq(k), accuracy = unlist(accuracies))
+      accuracies <- data.frame(id = paste0("Fold", str_pad(seq(k), 2, pad="0")), mean = unlist(accuracies), model = "QDA")
       # append to final_results 
       final_results <- c(final_results, accuracies = list(accuracies))
     } # end accuracy 
@@ -462,7 +463,8 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
     if("roc" %in% estimates){
       # calc roc
       preds %>%
-        roc_curve(truth, `posterior..1`) -> roc
+        roc_curve(truth, `posterior..1`) %>%
+        mutate(model = "QDA") -> roc
       
       # append to final_results 
       final_results <- c(final_results, roc = list(roc))
