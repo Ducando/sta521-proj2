@@ -142,9 +142,8 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
       add_model(mod) %>%
       add_formula(labels ~.)
     
-    ## CHANGE TO 25 TO RUN AT END
     res <- workflow %>%
-      tune_grid(grid = 5, 
+      tune_grid(grid = 25, 
                 control = control_grid(save_pred = TRUE),
                 resamples = folds)
     
@@ -236,9 +235,8 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
       add_model(mod) %>%
       add_formula(labels ~.)
     
-    ## CHANGE TO 25 TO RUN AT END
     res <- workflow %>%
-      tune_grid(grid = 5, 
+      tune_grid(grid = 25, 
                 control = control_grid(save_pred = TRUE),
                 resamples = folds)
     
