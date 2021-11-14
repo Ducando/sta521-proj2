@@ -1,1 +1,40 @@
-# sta521-proj2
+# STA 521 - Cloud Detection Project 
+By: Alison Reynolds and Jackie Du 
+
+### Overview 
+This code aims to fit a model that classifies cloudy and non-cloudy areas in satellite images of polar regions. The following sections outline how we conduct exploratory data analysis to identify predictor relationships, fit classification models (i.e. logistic, LDA, QDA, random forest, boosted trees) including tuning its parameters, and finally run diagnostics and an in-depth analysis of the best performing model (in this case, using random forest). 
+
+### EDA & Data Splitting
+
+### Model Fitting & Tuning 
+Our primary models of choice are logistic regression, linear discriminant analysis (LDA), quadratic discriminant analyis (QDA), random forest, and boosted trees. We created a generic function called `CVMaster` that handles all of the model fitting for each of these classification methods. 
+
+#### Inputs 
+These are the following inputs that the function takes: 
+- _X:_ A data frame of only the predictors 
+- _y:_ A vector of the corresponding response labels (factor)
+- _k:_ Number of folds (integer)
+- _loss:_ A vector of loss functions, ie "accuracy" (character) 
+- _estimates:_ A vector of estimates, ie c("roc", "conf_mat", "precision") (character)
+
+#### Outputs 
+We added the functionality to return a named list of output to increase the efficiency of the code. The results is a named list which can be accessed by subsetting 
+the list by the name of the argument passed, e.g. results$roc accesses the dataframe of roc statistics from the results. ROC estimates returns the sensitivity and specificity for the model, the confusion matrix is a matrix true positive, false positive, etc. values, precision returns the proportion of true positives over all predicted postives. 
+
+The loss function specified will return the average across folds as well as within folds, whereas each of the estimates returns only the average across all folds. For all models that require tuning, the results will return for the results for the model whose tuning parameters with the highest mean accuracy - the exact parameters can be found in results$accuracy, for example. 
+
+#### Model Specifics 
+There are two approaches in the model for cross validation and calculating the estimates depending on whether the tidymodels package could be used. For those in which the tidy package can be used (i.e. logistic, rf, boosted trees), we take advantage of the built in capabilities in creating folds and tuning parameters using the parsnip package. Otherwise, we create the folds using the caret package and iteratively loop through each fold to fit the models. 
+
+- **Logistic Regression** - tunes the regularization parameter between 0.0001 and 10
+- **Random Forest** - tunes a grid of 25 values of minimal node size (min_n) and number of variables to split at each node (mtry)
+- **Boosted Trees** - same as random forest 
+
+
+
+
+
+
+
+### Random Forest 
+
