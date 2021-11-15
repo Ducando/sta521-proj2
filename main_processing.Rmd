@@ -10,7 +10,9 @@ library(tidyverse)
 library(viridis)
 library(GGally)
 library(tidymodels)
-# library(patchwork)
+library(patchwork)
+# library(gridExtra)
+library(kableExtra)
 library(ggpubr)
 source("CVmaster.R")
 options(scipen = 999)
@@ -126,46 +128,81 @@ imagem1 %>%
 
 
 ```{r}
-# expert labels vs features 
-# imagem1 %>%
+# # expert labels vs features 
+# p1 <- imagem1 %>%
 #   filter(expert != 0) %>%
 #   ggplot(aes(x = ndai, fill= expert)) +
-#   geom_histogram()
+#   geom_histogram() + 
+#   scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7")) + 
+#   labs(x = "NDAI", y = "Count", fill = "Labels") + 
+#   theme_light() +
+#   theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), legend.title = element_text(size = 9), legend.text=element_text(size=8)) 
 # 
-# imagem1 %>%
+# p2 <- imagem1 %>%
 #   filter(expert != 0) %>%
 #   ggplot(aes(x = corr, fill= expert)) +
-#   geom_histogram()
+#   geom_histogram() + 
+#   scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7")) + 
+#   labs(x = "CORR", y = "", fill = "Labels") + 
+#   theme_light() +
+#   theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), legend.title = element_text(size = 9), legend.text=element_text(size=8)) 
 # 
-# imagem1 %>%
+# p3 <- imagem1 %>%
 #   filter(expert != 0) %>%
 #   ggplot(aes(x = sd, fill= expert)) +
-#   geom_histogram()
+#   geom_histogram() + 
+#   scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7")) +
+#   labs(x = "SD", y = "", fill = "Labels") + 
+#   theme_light() +
+#   theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), legend.title = element_text(size = 9), legend.text=element_text(size=8)) 
 # 
-# imagem1 %>%
+# p4 <- imagem1 %>%
 #   filter(expert != 0) %>%
 #   ggplot(aes(x = angle_df, fill= expert)) +
-#   geom_histogram()
+#   geom_histogram() + 
+#   scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7")) +
+#   labs(x = "Angle DF", y = "Count", fill = "Labels") + 
+#   theme_light() +
+#   theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), legend.title = element_text(size = 9), legend.text=element_text(size=8)) 
 # 
-# imagem1 %>%
+# p5 <- imagem1 %>%
 #   filter(expert != 0) %>%
 #   ggplot(aes(x = angle_cf, fill= expert)) +
-#   geom_histogram()
+#   geom_histogram() + 
+#   scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7")) +
+#   labs(x = "Angle CF", y = "", fill = "Labels") + 
+#   theme_light() +
+#   theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), legend.title = element_text(size = 9), legend.text=element_text(size=8)) 
 # 
-# imagem1 %>%
+# p6 <- imagem1 %>%
 #   filter(expert != 0) %>%
 #   ggplot(aes(x = angle_bf, fill= expert)) +
-#   geom_histogram()
+#   geom_histogram() + 
+#   scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7")) +
+#   labs(x = "Angle BF", y = "", fill = "Labels") + 
+#   theme_light() +
+#   theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), legend.title = element_text(size = 9), legend.text=element_text(size=8)) 
 # 
-# imagem1 %>%
+# p7 <-imagem1 %>%
 #   filter(expert != 0) %>%
 #   ggplot(aes(x = angle_af, fill= expert)) +
-#   geom_histogram()
+#   geom_histogram() + 
+#   scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7")) +
+#   labs(x = "Angle AF", y = "Count", fill = "Labels") + 
+#   theme_light() +
+#   theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), legend.title = element_text(size = 9), legend.text=element_text(size=8)) 
 # 
-# imagem1 %>%
+# p8 <- imagem1 %>%
 #   filter(expert != 0) %>%
 #   ggplot(aes(x = angle_an, fill= expert)) +
-#   geom_histogram()
+#   geom_histogram() + 
+#   scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7")) +
+#   labs(x = "Angle AN", y = "", fill = "Labels") + 
+#   theme_light() +
+#   theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), legend.title = element_text(size = 9), legend.text=element_text(size=8)) 
+# 
+# p1 + p2 + p3 + p4 + p5+ p6+ p7 + p8 + plot_layout(guides = "collect") 
+
 ```
 
 
@@ -433,24 +470,33 @@ image_log$accuracy %>%
   bind_rows(image_boost$accuracy) %>%
   bind_rows(image_lda$accuracy) %>%
   bind_rows(image_qda$accuracy) %>%
-  mutate(type = "Image") %>%
+  mutate(type = "Image Split") %>%
   bind_rows(block_log$accuracy) %>%
   bind_rows(block_rf$accuracy) %>%
   bind_rows(block_boost$accuracy) %>%
   bind_rows(block_lda$accuracy) %>%
   bind_rows(block_qda$accuracy) %>%
-  mutate(type = ifelse(is.na(type), "Block", type)) -> model_sum
+  mutate(type = ifelse(is.na(type), "Block Split", type)) -> model_sum
 
 model_sum %>%
   dplyr::select(-mtry, -min_n, -penalty, -metric) %>%
   group_by(type,model) %>%
   rename(accuracy = mean) %>%
-  mutate(mean_accuracy = mean(accuracy)) %>%
+  mutate(mean_accuracy = round(mean(accuracy), 4)) %>%
+  mutate(accuracy = round(accuracy, 4)) %>%
+  mutate(id = str_replace(id, "Fold", "Fold ")) %>%
   pivot_wider(names_from = id, values_from = accuracy) %>%
   arrange(desc(mean_accuracy)) %>%
   rename(`Mean Accuracy` = mean_accuracy)%>%
   rename_with(str_to_title) -> model_accuracy_table
 
+model_accuracy_table %>%
+  kbl() %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+```
+
+```{r}
+# BEST TUNING PARAMETER 
 model_sum %>%
   ungroup() %>%
   dplyr::select(-metric, -mean, -id) %>%
@@ -462,10 +508,7 @@ model_sum %>%
   pivot_longer(cols = c(Penalty, `Min Try`, `Min Nodes`), names_to = "Parameter", values_to = "Value") %>%
   mutate(Value = round(Value, 6)) %>%
   filter(!is.na(Value))
-
-  
 ```
-
 
 #### Part B 
 ```{r fig.width=12, fig.height=6}
