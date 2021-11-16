@@ -323,10 +323,10 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
     
     # fit model for each fold, get predictions and accuracy 
     fitModel <- function(i) {
-      trainx <- X_train_image[-folds[[i]],]
-      trainy <- y_train_image[-folds[[i]]]
-      valx <- X_train_image[folds[[i]],]
-      valy <- y_train_image[folds[[i]]]
+      trainx <- X[-folds[[i]],]
+      trainy <- y[-folds[[i]]]
+      valx <- X[folds[[i]],]
+      valy <- y[folds[[i]]]
       
       train_data <- bind_cols(y = trainy, trainx)
       res <- lda(y ~ ., data = train_data)
@@ -415,10 +415,10 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
     
     # fit model for each fold, get predictions and accuracy 
     fitModel <- function(i) {
-      trainx <- X_train_image[-folds[[i]],]
-      trainy <- y_train_image[-folds[[i]]]
-      valx <- X_train_image[folds[[i]],]
-      valy <- y_train_image[folds[[i]]]
+      trainx <- X[-folds[[i]],]
+      trainy <- y[-folds[[i]]]
+      valx <- X[folds[[i]],]
+      valy <- y[folds[[i]]]
       
       train_data <- bind_cols(y = trainy, trainx)
       res <- qda(y ~ ., data = train_data)
@@ -440,15 +440,15 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
                        fitModel(i)
                      })
     
+    # aggregate accuracies 
     if("accuracy" %in% loss){
-      # aggregate accuracies 
       accuracies <- map(seq(k), function(i){
         folds_res[[i]]$accuracy
       })
       
       accuracies <- data.frame(id = paste0("Fold", str_pad(seq(k), 2, pad="0")), mean = unlist(accuracies), model = "QDA")
       # append to final_results 
-      final_results <- c(final_results, accuracies = list(accuracies))
+      final_results <- c(final_results, accuracy = list(accuracies))
     } # end accuracy 
     
     # combine predictions 
@@ -456,7 +456,6 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
       folds_res[[i]]$preds
     })
     preds <- reduce(preds, bind_rows) 
-    
     
     if("roc" %in% estimates){
       # calc roc
@@ -501,6 +500,7 @@ CVmaster <- function (model,X,y,k,loss = "accuracy", estimates, ntree=NA) {
       # append to final_results 
       final_results <- c(final_results, precision = list(precision))
     } # end precision
+    
     
   } # end qda 
   
