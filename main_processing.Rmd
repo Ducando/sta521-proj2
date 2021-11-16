@@ -604,7 +604,7 @@ image_precision <- round(c(image_log$precision, image_rf$precision,image_boost$p
 block_precision <- round(c(block_log$precision, block_rf$precision,block_boost$precision,block_lda$precision,block_qda$precision),4)
 models <- c("Logistic Regression", "Random Forest", "Boosted Trees", "LDA", "QDA")
 
-bind_cols(Models = models, `Image Split` = image_precision) %>%
+bind_cols(Model = models, `Image Split` = image_precision) %>%
   bind_cols(`Block Split` = block_precision) %>%
   arrange(desc(`Block Split`)) -> precision_table
 
