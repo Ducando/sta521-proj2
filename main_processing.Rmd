@@ -109,31 +109,35 @@ imagem1 %>%
 
 # We might want to change the colors here becuase it's hard to distinguish between the blue and the black on the legend
 
-# # Image 1
-# p1 <- ggplot(imagem1, aes(x = x_coord, y = y_coord, color = expert_text)) +
-#   geom_point() +
-#   theme_settings +
-#   labs(x = "X Coordinate", y = "Y Coordinate", color = "Expert Labels") +
-#   scale_colour_manual(labels = c("Clear", "Cloudy", "Unlabeled"), values = c("#132B43", "#56B1F7", "purple")) +
-#   guides(color = guide_legend(override.aes = list(size = 4)))
-# 
-# # Image 2
-# p2 <- ggplot(imagem2, aes(x = x_coord, y = y_coord, color = expert_text)) +
-#   geom_point() +
-#   theme_settings +
-#   labs(x = "X Coordinate", y = "", color = "Expert Labels") +
-#   scale_colour_manual(labels = c("Clear", "Cloudy", "Unlabeled"), values = c("#132B43", "#56B1F7", "purple")) +
-#   guides(color = guide_legend(override.aes = list(size = 4)))
-# 
-# # Image 3
-# p3 <- ggplot(imagem3, aes(x = x_coord, y = y_coord, color = expert_text)) +
-#   geom_point() +
-#   theme_settings +
-#   labs(x = "X Coordinate", y = "", color = "Expert Labels") +
-#   scale_colour_manual(labels = c("Clear", "Cloudy", "Unlabeled"), values = c("#132B43", "#56B1F7", "purple")) +
-#   guides(color = guide_legend(override.aes = list(size = 4)))
-# 
-# p1 + p2 + p3 + plot_layout(guides = "collect") & theme(legend.position = 'bottom')
+# Image 1
+p1 <- ggplot(imagem1, aes(x = x_coord, y = y_coord, color = expert_text)) +
+  geom_point() +
+  theme_settings +
+  labs(x = "", y = "Y Coordinate", color = "Expert Labels") +
+  scale_colour_manual(labels = c("Clear", "Cloudy", "Unlabeled"), values = c("#132B43", "#56B1F7", "purple")) +
+  guides(color = guide_legend(override.aes = list(size = 4))) + 
+  ggtitle('Image 1')
+  
+
+# Image 2
+p2 <- ggplot(imagem2, aes(x = x_coord, y = y_coord, color = expert_text)) +
+  geom_point() +
+  theme_settings +
+  labs(x = "X Coordinate", y = "", color = "Expert Labels") +
+  scale_colour_manual(labels = c("Clear", "Cloudy", "Unlabeled"), values = c("#132B43", "#56B1F7", "purple")) +
+  guides(color = guide_legend(override.aes = list(size = 4))) + 
+  ggtitle('Image 2')
+
+# Image 3
+p3 <- ggplot(imagem3, aes(x = x_coord, y = y_coord, color = expert_text)) +
+  geom_point() +
+  theme_settings +
+  labs(x = "", y = "", color = "Expert Labels") +
+  scale_colour_manual(labels = c("Clear", "Cloudy", "Unlabeled"), values = c("#132B43", "#56B1F7", "purple")) +
+  guides(color = guide_legend(override.aes = list(size = 4))) + 
+  ggtitle('Image 3')
+
+p1 + p2 + p3 + plot_layout(guides = "collect") & theme(legend.position = 'bottom')
 ```
 
 &nbsp; 
@@ -565,6 +569,7 @@ image_roc_plot <- image_log$roc %>%
   ggplot(aes(x = 1 - specificity, y = sensitivity, col = model)) + 
   geom_path() +
   geom_abline(lty = 3) + 
+  geom_vline(xintercept = 0.5, color = "red", size = 0.5) + 
   coord_equal() +
   theme_settings + 
   labs(x = "1 - Specificity", y = "Sensitivity", col = "Model") + 
@@ -580,6 +585,7 @@ block_roc_plot<-  block_log$roc %>%
   ggplot(aes(x = 1 - specificity, y = sensitivity, col = model)) + 
   geom_path() +
   geom_abline(lty = 3) + 
+  geom_vline(xintercept = 0.5, color = "red", size = 0.5) + 
   coord_equal() + 
   theme_settings +
   labs(x = "1 - Specificity", y = "", col = "Model")+ 
