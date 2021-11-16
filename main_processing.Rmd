@@ -759,7 +759,7 @@ rf_test_block <- test %>%
 
 ```{r}
 mtrys <- 1:8
-min_ns <- 1:10
+min_ns <- c(0,1,5,10,15,20,25,30)
 
 block_acc <- matrix(NA,nrow=length(mtrys),ncol=length(min_ns))
 for (i in seq_along(mtrys)){
@@ -782,28 +782,27 @@ block_accuracy <- block_accuracy %>%
   mutate(min_node = as.integer(sub(".", "", min_node)))
 
 ggplot(block_accuracy, aes(mtry,min_node,fill=Accuracy)) + 
-  geom_tile() +
-  scale_y_continuous(breaks=c(2,4,6,8,10))+theme_light()+
+  geom_tile() +theme_light()+scale_y_continuous(breaks = c(2,4,6,8),labels=c(5,15,25,35))+
   theme(axis.text = element_text(size=9), axis.title = element_text(size = 9), 
         legend.title = element_text(size = 9), plot.title = element_text(size = 12, hjust = 0.5))+
   labs(x="Number of Variables Available",y="Minimum Node Size", title = "Validation Accuracy")
 ```
-Based on this, picking 4 for both mtry and min_n (0.9138478)
+Based on this, picking 4 for mtry and 25 for min_n (0.9139698)
 
 ```{r}
-rf_mod <- ranger(expert ~., data = rf_train_block,mtry = 4, min_n = 4, trees = 100)
+rf_mod <- ranger(expert ~., data = rf_train_block,mtry = 5, min_n = 25, trees = 100)
 preds <- predict(mod,data=rf_val_block)
 mean(rf_val_block$expert==preds$predictions)
 ```
 
 ```{r}
-rf_mod <- ranger(expert ~., data = rf_train_block,mtry = 4, min_n = 4, trees = 250)
+rf_mod <- ranger(expert ~., data = rf_train_block,mtry = 5, min_n = 25, trees = 250)
 preds <- predict(mod,data=rf_val_block)
 mean(rf_val_block$expert==preds$predictions)
 ```
 
 ```{r}
-rf_mod <- ranger(expert ~., data = rf_train_block,mtry = 4, min_n = 4, trees = 500)
+rf_mod <- ranger(expert ~., data = rf_train_block,mtry = 5, min_n = 25, trees = 500)
 preds <- predict(mod,data=rf_val_block)
 mean(rf_val_block$expert==preds$predictions)
 ```
@@ -812,7 +811,7 @@ Increasing number of trees does not significantly change predictions
 
 ```{r}
 set.seed(513)
-final_mod <- ranger(expert ~., data = rf_train_block,mtry = 4, min_n = 4, trees = 50,importance = 'impurity')
+final_mod <- ranger(expert ~., data = rf_train_block,mtry = 5, min_n = 25, trees = 50,importance = 'impurity')
 val_preds <- predict(final_mod,data=rf_val_block)
 mean(rf_val_block$expert==val_preds$predictions)
 
@@ -821,7 +820,7 @@ mean(rf_test_block$expert==test_preds$predictions)
 ```
 
 ```{r}
-final_mod_prob <- ranger(expert ~., data = rf_train_block,mtry = 4, min_n = 4, trees = 50,probability = TRUE)
+final_mod_prob <- ranger(expert ~., data = rf_train_block,mtry = 5, min_n = 25, trees = 50,probability = TRUE)
 test_prob_preds <- predict(final_mod_prob,data=rf_test_block)
 ```
 
@@ -906,27 +905,37 @@ image_1_plot + image_2_plot + image_3_plot + plot_layout(guides = "collect") & t
 
 ```{r}
 image_1_pred_class <- image_1_pred_class %>%
-  mutate(misclassified = ifelse(imagem1$expert != 0 & class != imagem1$expert,"Yes","No"))
+  mutate(misclassification = ifelse(imagem1$expert != 0 & class != imagem1$expert,"Yes","No"))
 
-ggplot(image_1_pred_class, aes(x_coord,y_coord, fill = misclassified)) + 
+ggplot(image_1_pred_class, aes(x_coord,y_coord, fill = misclassification)) + 
      geom_raster()+ scale_fill_manual(values = c("#132B43", "#56B1F7"))
 ```
 
 ```{r}
 image_2_pred_class <- image_2_pred_class %>%
-  mutate(misclassified = ifelse(imagem2$expert != 0 & class != imagem2$expert,"Yes","No"))
+  mutate(misclassification = ifelse(imagem2$expert != 0 & class != imagem2$expert,"Yes","No"))
 
-ggplot(image_2_pred_class, aes(x_coord,y_coord, fill = misclassified)) + 
+ggplot(image_2_pred_class, aes(x_coord,y_coord, fill = misclassification)) + 
      geom_raster()+ scale_fill_manual(values = c("#132B43", "#56B1F7"))
 ```
 
 ```{r}
 image_3_pred_class <- image_3_pred_class %>%
-  mutate(misclassified = ifelse(imagem3$expert != 0 & class != imagem3$expert,"Yes","No"))
+  mutate(misclassification = ifelse(imagem3$expert != 0 & class != imagem3$expert,"Yes","No"))
 
-ggplot(image_3_pred_class, aes(x_coord,y_coord, fill = misclassified)) + 
+ggplot(image_3_pred_class, aes(x_coord,y_coord, fill = misclassification)) + 
      geom_raster()+ scale_fill_manual(values = c("#132B43", "#56B1F7"))
 ```
+
+```{r}
+image_1_pred_class <- image_1_pred_class %>%
+  mutate(misclassification = ifelse(imagem1$expert != 0 & class != imagem1$expert,1,.2))
+image_2_pred_class <- image_2_pred_class %>%
+  mutate(misclassification = ifelse(imagem2$expert != 0 & class != imagem2$expert,1,.2))
+image_3_pred_class <- image_3_pred_class %>%
+  mutate(misclassification = ifelse(imagem3$expert != 0 & class != imagem3$expert,1,.2))
+```
+
 
 ```{r,fig.width=7,fig.height=3}
 misclass_1 <- ggplot(image_1_pred_class, aes(x_coord,y_coord, fill = class,alpha=misclassification)) + 
@@ -939,7 +948,8 @@ misclass_1 <- ggplot(image_1_pred_class, aes(x_coord,y_coord, fill = class,alpha
   theme_light()+
   theme(axis.text = element_text(size=10), axis.title = element_text(size = 10), 
         legend.title = element_text(size = 12), plot.title = element_text(size = 12, hjust = 0.5))+
-  theme(axis.title.x = element_blank())
+  theme(axis.title.x = element_blank(), 
+        panel.grid.major = element_blank(),panel.grid.minor = element_blank())
 
 misclass_2 <- ggplot(image_2_pred_class, aes(x_coord,y_coord, fill = class,alpha=misclassification)) + 
   geom_raster()+ scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7"))+ scale_alpha_identity()+
@@ -952,7 +962,8 @@ misclass_2 <- ggplot(image_2_pred_class, aes(x_coord,y_coord, fill = class,alpha
   theme(axis.text = element_text(size=10), axis.title = element_text(size = 10), 
         legend.title = element_text(size = 12), plot.title = element_text(size = 12, hjust = 0.5))+
   theme(axis.text.y = element_blank(),axis.ticks.y = element_blank(),
-                                        axis.title.y = element_blank())
+                                        axis.title.y = element_blank(), 
+        panel.grid.major = element_blank(),panel.grid.minor = element_blank())
 
 misclass_3 <- ggplot(image_3_pred_class, aes(x_coord,y_coord, fill = class,alpha=misclassification)) + 
   geom_raster() + scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7"))+ scale_alpha_identity()+
@@ -965,7 +976,8 @@ misclass_3 <- ggplot(image_3_pred_class, aes(x_coord,y_coord, fill = class,alpha
   theme(axis.text = element_text(size=10), axis.title = element_text(size = 10), 
         legend.title = element_text(size = 12), plot.title = element_text(size = 12, hjust = 0.5))+
   theme(axis.text.y = element_blank(),axis.ticks.y = element_blank(),
-                       axis.title.y = element_blank(),axis.title.x = element_blank())
+                       axis.title.y = element_blank(),axis.title.x = element_blank(), 
+        panel.grid.major = element_blank(),panel.grid.minor = element_blank())
 misclass_1 + misclass_2 + misclass_3 + plot_layout(guides = "collect") & theme(legend.position = 'bottom')
 ```
 
@@ -987,7 +999,7 @@ rf_test_image <- test_image %>%
 
 ```{r}
 mtrys <- 1:8
-min_ns <- 1:10
+min_ns <- c(0,1,5,10,15,20,25,30)
 
 image_acc <- matrix(NA,nrow=length(mtrys),ncol=length(min_ns))
 for (i in seq_along(mtrys)){
@@ -1007,18 +1019,17 @@ image_accuracy <- image_accuracy %>%
   mutate(min_node = as.integer(sub(".", "", min_node)))
 
 ggplot(image_accuracy, aes(mtry,min_node,fill=Accuracy)) + 
-  geom_tile() +
-  scale_y_continuous(breaks=c(2,4,6,8,10))+theme_light()+
+  geom_tile() +theme_light()+scale_y_continuous(breaks = c(2,4,6,8),labels=c(5,15,25,35))+
   theme(axis.text = element_text(size=9), axis.title = element_text(size = 9), 
         legend.title = element_text(size = 9), plot.title = element_text(size = 12, hjust = 0.5))+
   labs(x="Number of Variables Available",y="Minimum Node Size", title = "Validation Accuracy")
 ```
   
-Based on this, pick 2 for mtry and 6 for min node (note accuracy is significantly worse), 0.6767066	
+Based on this, pick 2 for mtry and 35 for min node (note accuracy is significantly worse), 0.6800	
 
 ```{r}
 set.seed(513)
-final_image_mod <- ranger(expert ~., data = rf_train_image,mtry = 2, min_n = 6, trees = 50,importance = 'impurity')
+final_image_mod <- ranger(expert ~., data = rf_train_image,mtry = 2, min_n = 35, trees = 50,importance = 'impurity')
 val_image_preds <- predict(final_image_mod,data=rf_val_image)
 mean(rf_val_image$expert==val_image_preds$predictions)
 
