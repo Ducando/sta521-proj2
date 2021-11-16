@@ -19,7 +19,7 @@ options(scipen = 999)
 
 
 # graph theme object 
-theme_settings <- theme_light() + theme(axis.text = element_text(size=14), axis.title = element_text(size = 15), legend.title = element_text(size = 15), plot.title = element_text(size = 14, hjust = 0.5), legend.text = element_text(size = 15)) 
+theme_settings <- theme_light() + theme(axis.text = element_text(size=16), axis.title = element_text(size = 17), legend.title = element_text(size = 17), plot.title = element_text(size = 16, hjust = 0.5), legend.text = element_text(size = 17)) 
 ```
 
 ## Section 1 
@@ -314,7 +314,7 @@ split_data <- function(data, block) {
     
     data %>%
       filter(x_coord >= coords$left, x_coord <= coords$right,
-            y_coord >= coords$top, y_coord <= coords$bot) -> filtered_data
+            y_coord >= coords$top, y_coord <= coords$bottom) -> filtered_data
         
     final_data <- rbind(final_data, filtered_data)
   }
@@ -613,13 +613,127 @@ precision_table %>%
   kable_classic(full_width = F, html_font = "Cambria")
 ```
 
-```{r}
-## CONF MATRIX
-# image_log$conf_mat
-# 
-# ggplot(data = image_log$conf_mat, aes(x = `truth_-1`, y = truth_1 )) + 
-#   geom_tile()
+```{r fig.width = 12}
+## CONF MATRIX IMAGE
+p1 <- tibble(image_log$conf_mat) %>% 
+  mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
+  rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
+  pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
+  geom_tile(aes(fill = value))+
+  geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
+  scale_fill_gradient(limits = c(0, 0.65)) +
+  theme_settings + 
+  ggtitle("Logistic Regression")
+
+p2 <- tibble(image_rf$conf_mat) %>% 
+  mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
+  rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
+  pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
+  geom_tile(aes(fill = value))+
+  geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
+  scale_fill_gradient(limits = c(0, 0.65)) +
+  theme_settings + 
+  ggtitle("Random Forest")
+
+p3 <- tibble(image_boost$conf_mat) %>% 
+  mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
+  rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
+  pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
+  geom_tile(aes(fill = value))+
+  geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
+  scale_fill_gradient(limits = c(0, 0.65)) +
+  theme_settings + 
+  ggtitle("Boosted Trees")
+
+p4 <- tibble(image_lda$conf_mat) %>% 
+  mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
+  rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
+  pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
+  geom_tile(aes(fill = value))+
+  geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
+  scale_fill_gradient(limits = c(0, 0.65)) +
+  theme_settings + 
+  ggtitle("LDA")
+
+p5 <- tibble(image_qda$conf_mat) %>% 
+  mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
+  rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
+  pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
+  geom_tile(aes(fill = value))+
+  geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
+  scale_fill_gradient(limits = c(0, 0.65)) +
+  theme_settings + 
+  ggtitle("QDA")
   
+  
+p1 + p2 + p3 + p4 + p5 + plot_layout(guides = "collect") & theme(legend.position = 'bottom')
+
+```
+
+```{r fig.width = 12}
+## CONFUSION MATRIX BLOCK
+p1 <- tibble(block_log$conf_mat) %>% 
+  mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
+  rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
+  pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
+  geom_tile(aes(fill = value))+
+  geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
+  scale_fill_gradient(limits = c(0, 0.65)) +
+  theme_settings + 
+  ggtitle("Logistic Regression")
+
+p2 <- tibble(block_rf$conf_mat) %>% 
+  mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
+  rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
+  pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
+  geom_tile(aes(fill = value))+
+  geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
+  scale_fill_gradient(limits = c(0, 0.65)) +
+  theme_settings + 
+  ggtitle("Random Forest")
+
+p3 <- tibble(block_boost$conf_mat) %>% 
+  mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
+  rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
+  pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
+  geom_tile(aes(fill = value))+
+  geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
+  scale_fill_gradient(limits = c(0, 0.65)) +
+  theme_settings + 
+  ggtitle("Boosted Trees")
+
+p4 <- tibble(block_lda$conf_mat) %>% 
+  mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
+  rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
+  pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
+  geom_tile(aes(fill = value))+
+  geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
+  scale_fill_gradient(limits = c(0, 0.65)) +
+  theme_settings + 
+  ggtitle("LDA")
+
+p5 <- tibble(block_qda$conf_mat) %>% 
+  mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
+  rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
+  pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
+  geom_tile(aes(fill = value))+
+  geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
+  scale_fill_gradient(limits = c(0, 0.65)) +
+  theme_settings + 
+  ggtitle("QDA")
+  
+  
+p1 + p2 + p3 + p4 + p5 + plot_layout(guides = "collect") & theme(legend.position = 'bottom')
 ```
 
 
