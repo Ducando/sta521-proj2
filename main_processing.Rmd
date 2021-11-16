@@ -546,11 +546,21 @@ for (i in seq_along(mtrys)){
 ```
 
 ```{r}
-heatmap(block_acc)
+library(RColorBrewer)
+heatmap(block_acc, Colv = NA, Rowv = NA,col=colorRampPalette(brewer.pal(8, "Blues"))(25))
 
+block_accuracy <- as.data.frame(block_acc)
+block_accuracy$mtry <- 1:8
+block_accuracy <- block_accuracy %>%
+  pivot_longer(!mtry,names_to = "min_node", values_to = "Accuracy") %>%
+  mutate(min_node = as.integer(sub(".", "", min_node)))
 
-plot(1:8,apply(block_acc,1,mean),type="l",col="#56B1F7",xlim=c(1,10))
-lines(1:10,apply(block_acc,2,mean),col="#132B43")
+ggplot(block_accuracy, aes(mtry,min_node,fill=Accuracy)) + 
+  geom_tile() +
+  scale_y_continuous(breaks=c(2,4,6,8,10))+theme_light()+
+  theme(axis.text = element_text(size=9), axis.title = element_text(size = 9), 
+        legend.title = element_text(size = 9), plot.title = element_text(size = 12, hjust = 0.5))+
+  labs(x="Number of Variables Available",y="Minimum Node Size", title = "Validation Accuracy")
 ```
 Based on this, picking 4 for both mtry and min_n (0.9138478)
 
@@ -593,9 +603,9 @@ test_prob_preds <- predict(final_mod_prob,data=rf_test_block)
 var_imp <- tibble(variable=names(final_mod$variable.importance),importance = final_mod$variable.importance)
 
  ggplot(var_imp, aes(x=reorder(variable,importance), y=importance,fill=importance))+ 
-      geom_bar(stat="identity", position="dodge")+ coord_flip()+
+      geom_bar(stat="identity", position="dodge")+ coord_flip()+ theme_light()+
       ylab("Variable Importance")+
-      xlab("")+
+      xlab("")
       guides(fill=F)
 ```
 
