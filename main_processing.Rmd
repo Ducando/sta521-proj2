@@ -717,7 +717,7 @@ var_imp <- tibble(variable=names(final_mod$variable.importance),importance = fin
  ggplot(var_imp, aes(x=reorder(variable,importance), y=importance,fill=importance))+ 
       geom_bar(stat="identity", position="dodge")+ coord_flip()+ theme_light()+
       ylab("Variable Importance")+
-      xlab("")
+      xlab("")+
       guides(fill=F)
 ```
 
@@ -730,9 +730,12 @@ ggplot(image_1_pred_class, aes(x_coord,y_coord, fill = class)) +
      geom_raster()+ scale_fill_manual(values = c("#132B43", "#56B1F7"))
 
 image_1_preds <- predict(final_mod_prob,data=image_1_data)$predictions
-image_1_probs <- tibble(x_coord = imagem1$x_coord, y_coord = imagem1$y_coord, prob = image_1_preds[,2])
-ggplot(image_1_probs, aes(x_coord,y_coord, fill = prob)) + 
-     geom_raster()
+image_1_probs <- tibble(x_coord = imagem1$x_coord, y_coord = imagem1$y_coord, Probability = image_1_preds[,2])
+ggplot(image_1_probs, aes(x_coord,y_coord, fill = Probability)) + 
+     geom_raster()+labs(x="X Coordinate", y="Y Coordinate", title = "Image 1 Cloudiness Probability")+
+  theme_light()+
+  theme(axis.text = element_text(size=10), axis.title = element_text(size = 10), 
+        legend.title = element_text(size = 10), plot.title = element_text(size = 12, hjust = 0.5))
 ```
 
 ```{r}
@@ -744,8 +747,8 @@ ggplot(image_2_pred_class, aes(x_coord,y_coord, fill = class)) +
      geom_raster()+scale_fill_manual(values = c("#132B43", "#56B1F7"))
 
 image_2_preds <- predict(final_mod_prob,data=image_2_data)$predictions
-image_2_probs <- tibble(x_coord = imagem2$x_coord, y_coord = imagem2$y_coord, prob = image_2_preds[,2])
-ggplot(image_2_probs, aes(x_coord,y_coord, fill = prob)) + 
+image_2_probs <- tibble(x_coord = imagem2$x_coord, y_coord = imagem2$y_coord, Probability = image_2_preds[,2])
+ggplot(image_2_probs, aes(x_coord,y_coord, fill = Probability)) + 
      geom_raster()
 ```
 
@@ -758,10 +761,34 @@ ggplot(image_3_pred_class, aes(x_coord,y_coord, fill = class)) +
      geom_raster()+ scale_fill_manual(values = c("#132B43", "#56B1F7"))
 
 image_3_preds <- predict(final_mod_prob,data=image_3_data)$predictions
-image_3_probs <- tibble(x_coord = imagem3$x_coord, y_coord = imagem3$y_coord, prob = image_3_preds[,2])
-ggplot(image_3_probs, aes(x_coord,y_coord, fill = prob)) + 
+image_3_probs <- tibble(x_coord = imagem3$x_coord, y_coord = imagem3$y_coord, Probability = image_3_preds[,2])
+ggplot(image_3_probs, aes(x_coord,y_coord, fill = Probability)) + 
      geom_raster()
 ```
+
+```{r,fig.width=7,fig.height=3.5}
+image_1_plot <- ggplot(image_1_probs, aes(x_coord,y_coord, fill = Probability)) + 
+     geom_raster()+labs(x="X Coordinate", y="Y Coordinate", title = "Image 1")+
+  theme_light()+
+  theme(axis.text = element_text(size=10), axis.title = element_text(size = 10), 
+        legend.title = element_text(size = 12), plot.title = element_text(size = 12, hjust = 0.5))+
+  theme(axis.title.x = element_blank())
+image_2_plot <- ggplot(image_2_probs, aes(x_coord,y_coord, fill = Probability)) + 
+     geom_raster()+labs(x="X Coordinate", y="Y Coordinate", title = "Image 2")+
+  theme_light()+
+  theme(axis.text = element_text(size=10), axis.title = element_text(size = 10), 
+        legend.title = element_text(size = 12), plot.title = element_text(size = 12, hjust = 0.5))+
+  theme(axis.text.y = element_blank(),axis.ticks.y = element_blank(),
+                                        axis.title.y = element_blank())
+image_3_plot <- ggplot(image_3_probs, aes(x_coord,y_coord, fill = Probability)) + 
+     geom_raster()+labs(x="X Coordinate", y="Y Coordinate", title = "Image 3")+
+  theme_light()+ theme(axis.text.y = element_blank(),axis.ticks.y = element_blank(),
+                       axis.title.y = element_blank(),axis.title.x = element_blank())+
+  theme(axis.text = element_text(size=10), axis.title = element_text(size = 10), 
+        legend.title = element_text(size = 12), plot.title = element_text(size = 12, hjust = 0.5))
+image_1_plot + image_2_plot + image_3_plot + plot_layout(guides = "collect") & theme(legend.position = 'bottom')
+```
+
 
 ```{r}
 image_1_pred_class <- image_1_pred_class %>%
