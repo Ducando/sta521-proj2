@@ -246,6 +246,7 @@ test_image <- images[[indices[3]]]
 
 ```{r}
 find_blocks <- function(x, y, num_blocks) {
+
   n <- sqrt(num_blocks)
   x_min <- min(x)
   x_max <- max(x)
@@ -256,7 +257,7 @@ find_blocks <- function(x, y, num_blocks) {
   y_step <- (y_max-y_min)/n
   
   block <- tibble()
-  names(block) <- c("top", "bottom", "left", "right")
+
   
   for (i in seq_len(n)) {
     # make top and bottom
@@ -276,7 +277,7 @@ find_blocks <- function(x, y, num_blocks) {
         bind_rows(data.frame(top, bot, left, right)) -> block 
     }
   }
-  
+  names(block) <- c("top", "bottom", "left", "right")
   return(block)
 }
 
