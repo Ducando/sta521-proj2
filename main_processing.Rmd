@@ -1,6 +1,6 @@
 ---
 title: "521 Project 2"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE, warning = FALSE, message = FALSE}
@@ -18,7 +18,11 @@ options(scipen = 999)
 
 
 # graph theme object 
-theme_settings <- theme_light() + theme(axis.text = element_text(size=16), axis.title = element_text(size = 17), legend.title = element_text(size = 17), plot.title = element_text(size = 16, hjust = 0.5), legend.text = element_text(size = 17)) 
+theme_settings <- theme_light() + 
+  theme(axis.text = element_text(size=16), axis.title = element_text(size = 17), 
+        legend.title = element_text(size = 17), 
+        plot.title = element_text(size = 16, hjust = 0.5), 
+        legend.text = element_text(size = 17)) 
 ```
 
 ## Section 1 
@@ -38,15 +42,18 @@ imagem3 <- read.table('./data/imagem3.txt', col.names = names)
 # make expert column factor and text version
 imagem1 %>%
   mutate(expert = as.factor(expert)) %>%
-  mutate(expert_text = ifelse(expert == 0, "unlabeled", ifelse(expert == 1, "cloudy","clear"))) -> imagem1
+  mutate(expert_text = ifelse(expert == 0, "unlabeled", 
+                              ifelse(expert == 1, "cloudy","clear"))) -> imagem1
 
 imagem2 %>%
   mutate(expert = as.factor(expert)) %>%
-  mutate(expert_text = ifelse(expert == 0, "unlabeled", ifelse(expert == 1, "cloudy","clear"))) -> imagem2
+  mutate(expert_text = ifelse(expert == 0, "unlabeled", 
+                              ifelse(expert == 1, "cloudy","clear"))) -> imagem2
 
 imagem3 %>%
   mutate(expert = as.factor(expert)) %>%
-  mutate(expert_text = ifelse(expert == 0, "unlabeled", ifelse(expert == 1, "cloudy","clear"))) -> imagem3
+  mutate(expert_text = ifelse(expert == 0, "unlabeled", 
+                              ifelse(expert == 1, "cloudy","clear"))) -> imagem3
 
 imagem1 %>%
   bind_rows(imagem2) %>%
@@ -110,7 +117,8 @@ p1 <- ggplot(imagem1, aes(x = x_coord, y = y_coord, color = expert_text)) +
   geom_point() +
   theme_settings +
   labs(x = "", y = "Y Coordinate", color = "Expert Labels") +
-  scale_colour_manual(labels = c("Clear", "Cloudy", "Unlabeled"), values = c("#132B43", "#56B1F7", "purple")) +
+  scale_colour_manual(labels = c("Clear", "Cloudy", "Unlabeled"),
+                      values = c("#132B43", "#56B1F7", "purple")) +
   guides(color = guide_legend(override.aes = list(size = 4))) + 
   ggtitle('Image 1')
   
@@ -120,7 +128,8 @@ p2 <- ggplot(imagem2, aes(x = x_coord, y = y_coord, color = expert_text)) +
   geom_point() +
   theme_settings +
   labs(x = "X Coordinate", y = "", color = "Expert Labels") +
-  scale_colour_manual(labels = c("Clear", "Cloudy", "Unlabeled"), values = c("#132B43", "#56B1F7", "purple")) +
+  scale_colour_manual(labels = c("Clear", "Cloudy", "Unlabeled"), 
+                      values = c("#132B43", "#56B1F7", "purple")) +
   guides(color = guide_legend(override.aes = list(size = 4))) + 
   ggtitle('Image 2')
 
@@ -129,11 +138,13 @@ p3 <- ggplot(imagem3, aes(x = x_coord, y = y_coord, color = expert_text)) +
   geom_point() +
   theme_settings +
   labs(x = "", y = "", color = "Expert Labels") +
-  scale_colour_manual(labels = c("Clear", "Cloudy", "Unlabeled"), values = c("#132B43", "#56B1F7", "purple")) +
+  scale_colour_manual(labels = c("Clear", "Cloudy", "Unlabeled"), 
+                      values = c("#132B43", "#56B1F7", "purple")) +
   guides(color = guide_legend(override.aes = list(size = 4))) + 
   ggtitle('Image 3')
 
-p1 + p2 + p3 + plot_layout(guides = "collect") & theme(legend.position = 'bottom')
+p1 + p2 + p3 + plot_layout(guides = "collect") &
+  theme(legend.position = 'bottom')
 ```
 
 &nbsp; 
@@ -158,73 +169,89 @@ p1 <- imagem1 %>%
   filter(expert != 0) %>%
   ggplot(aes(x = ndai, fill= expert)) +
   geom_histogram() +
-  scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7")) +
+  scale_fill_manual(labels = c("Clear", "Cloudy"), 
+                    values = c("#132B43", "#56B1F7")) +
   labs(x = "NDAI", y = "Count", fill = "Labels") +
   theme_light() +
-  theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), legend.title = element_text(size = 9), legend.text=element_text(size=8))
+  theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), 
+        legend.title = element_text(size = 9), legend.text=element_text(size=8))
 
 p2 <- imagem1 %>%
   filter(expert != 0) %>%
   ggplot(aes(x = corr, fill= expert)) +
   geom_histogram() +
-  scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7")) +
+  scale_fill_manual(labels = c("Clear", "Cloudy"), 
+                    values = c("#132B43", "#56B1F7")) +
   labs(x = "CORR", y = "", fill = "Labels") +
   theme_light() +
-  theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), legend.title = element_text(size = 9), legend.text=element_text(size=8))
+  theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), 
+        legend.title = element_text(size = 9), legend.text=element_text(size=8))
 
 p3 <- imagem1 %>%
   filter(expert != 0) %>%
   ggplot(aes(x = sd, fill= expert)) +
   geom_histogram() +
-  scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7")) +
+  scale_fill_manual(labels = c("Clear", "Cloudy"), 
+                    values = c("#132B43", "#56B1F7")) +
   labs(x = "SD", y = "", fill = "Labels") +
   theme_light() +
-  theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), legend.title = element_text(size = 9), legend.text=element_text(size=8))
+  theme(axis.text = element_text(size=7), axis.title = element_text(size = 8),
+        legend.title = element_text(size = 9), legend.text=element_text(size=8))
 
 p4 <- imagem1 %>%
   filter(expert != 0) %>%
   ggplot(aes(x = angle_df, fill= expert)) +
   geom_histogram() +
-  scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7")) +
+  scale_fill_manual(labels = c("Clear", "Cloudy"), 
+                    values = c("#132B43", "#56B1F7")) +
   labs(x = "Angle DF", y = "Count", fill = "Labels") +
   theme_light() +
-  theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), legend.title = element_text(size = 9), legend.text=element_text(size=8))
+  theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), 
+        legend.title = element_text(size = 9), legend.text=element_text(size=8))
 
 p5 <- imagem1 %>%
   filter(expert != 0) %>%
   ggplot(aes(x = angle_cf, fill= expert)) +
   geom_histogram() +
-  scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7")) +
+  scale_fill_manual(labels = c("Clear", "Cloudy"), 
+                    values = c("#132B43", "#56B1F7")) +
   labs(x = "Angle CF", y = "", fill = "Labels") +
   theme_light() +
-  theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), legend.title = element_text(size = 9), legend.text=element_text(size=8))
+  theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), 
+        legend.title = element_text(size = 9), legend.text=element_text(size=8))
 
 p6 <- imagem1 %>%
   filter(expert != 0) %>%
   ggplot(aes(x = angle_bf, fill= expert)) +
   geom_histogram() +
-  scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7")) +
+  scale_fill_manual(labels = c("Clear", "Cloudy"), 
+                    values = c("#132B43", "#56B1F7")) +
   labs(x = "Angle BF", y = "", fill = "Labels") +
   theme_light() +
-  theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), legend.title = element_text(size = 9), legend.text=element_text(size=8))
+  theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), 
+        legend.title = element_text(size = 9), legend.text=element_text(size=8))
 
 p7 <-imagem1 %>%
   filter(expert != 0) %>%
   ggplot(aes(x = angle_af, fill= expert)) +
   geom_histogram() +
-  scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7")) +
+  scale_fill_manual(labels = c("Clear", "Cloudy"), 
+                    values = c("#132B43", "#56B1F7")) +
   labs(x = "Angle AF", y = "Count", fill = "Labels") +
   theme_light() +
-  theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), legend.title = element_text(size = 9), legend.text=element_text(size=8))
+  theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), 
+        legend.title = element_text(size = 9),legend.text=element_text(size=8))
 
 p8 <- imagem1 %>%
   filter(expert != 0) %>%
   ggplot(aes(x = angle_an, fill= expert)) +
   geom_histogram() +
-  scale_fill_manual(labels = c("Clear", "Cloudy"), values = c("#132B43", "#56B1F7")) +
+  scale_fill_manual(labels = c("Clear", "Cloudy"), 
+                    values = c("#132B43", "#56B1F7")) +
   labs(x = "Angle AN", y = "", fill = "Labels") +
   theme_light() +
-  theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), legend.title = element_text(size = 9), legend.text=element_text(size=8))
+  theme(axis.text = element_text(size=7), axis.title = element_text(size = 8), 
+        legend.title = element_text(size = 9), legend.text=element_text(size=8))
 
 p1 + p2 + p3 + p4 + p5+ p6+ p7 + p8 + plot_layout(guides = "collect")
 
@@ -319,9 +346,10 @@ split_data <- function(data, block) {
 
 
 ```{r}
-split_blocks_main <- function(df, num_blocks, train_num_blocks, val_num_blocks) {
+split_blocks_main <- function(df, num_blocks, train_num_blocks, val_num_blocks){
   blocks <- find_blocks(df$x_coord, df$y_coord, num_blocks)
-  block_indices <- split_blocks(blocks, num_blocks, train_num_blocks, val_num_blocks)
+  block_indices <- split_blocks(blocks, num_blocks, 
+                                train_num_blocks, val_num_blocks)
   
   val <- split_data(df, block_indices$val)
   test <- split_data(df, block_indices$test)
@@ -377,7 +405,8 @@ all %>%
   dplyr::select(ndai:angle_an) %>%
   cor(.,as.integer(all$expert)) -> correlation_table
 
-names <- c("NDAI", "SD", "CORR", "Angle DF", "Angle CF", "Angle BF", "Angle AF", "Angle AN")
+names <- c("NDAI", "SD", "CORR", 
+           "Angle DF", "Angle CF", "Angle BF", "Angle AF", "Angle AN")
 
 tibble(names, correlation_table) %>%
   mutate(correlation_table = round(correlation_table, 4)) %>%
@@ -600,7 +629,8 @@ image_precision <- round(c(image_log$precision, image_rf$precision,
 block_precision <- round(c(block_log$precision, block_rf$precision,
                            block_boost$precision,block_lda$precision,
                            block_qda$precision),4)
-models <- c("Logistic Regression", "Random Forest", "Boosted Trees", "LDA", "QDA")
+models <- c("Logistic Regression", "Random Forest", 
+            "Boosted Trees", "LDA", "QDA")
 
 bind_cols(Model = models, `Image Split` = image_precision) %>%
   bind_cols(`Block Split` = block_precision) %>%
