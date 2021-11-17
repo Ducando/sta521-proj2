@@ -325,7 +325,7 @@ split_data <- function(data, block) {
 
 
 ```{r}
-process_data_main <- function(df, num_blocks, train_num_blocks, val_num_blocks) {
+split_blocks_main <- function(df, num_blocks, train_num_blocks, val_num_blocks) {
   blocks <- find_blocks(df$x_coord, df$y_coord, num_blocks)
   block_indices <- split_blocks(blocks, num_blocks, train_num_blocks, val_num_blocks)
   
@@ -339,9 +339,9 @@ process_data_main <- function(df, num_blocks, train_num_blocks, val_num_blocks) 
 
 
 ```{r}
-image1_dfs <- process_data_main(imagem1, 16, 10, 3)
-image2_dfs <- process_data_main(imagem2, 16, 10, 3)
-image3_dfs <- process_data_main(imagem3, 16, 10, 3)
+image1_dfs <- split_blocks_main(imagem1, 16, 10, 3)
+image2_dfs <- split_blocks_main(imagem2, 16, 10, 3)
+image3_dfs <- split_blocks_main(imagem3, 16, 10, 3)
 
 train <- image1_dfs$train %>%
   bind_rows(image2_dfs$train) %>%
