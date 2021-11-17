@@ -613,12 +613,57 @@ precision_table %>%
   kable_classic(full_width = F, html_font = "Cambria")
 ```
 
+```{r}
+## F1 ESTIMATES
+image_log_recall <- image_log$conf_mat["predict_1", "truth_1"] / (image_log$conf_mat["predict_1", "truth_1"] + image_log$conf_mat["predict_-1", "truth_1"] )
+image_rf_recall <- image_rf$conf_mat["predict_1", "truth_1"] / (image_rf$conf_mat["predict_1", "truth_1"] + image_rf$conf_mat["predict_-1", "truth_1"] )
+image_lda_recall <- image_lda$conf_mat["predict_1", "truth_1"] / (image_lda$conf_mat["predict_1", "truth_1"] + image_lda$conf_mat["predict_-1", "truth_1"] )
+image_qda_recall <- image_qda$conf_mat["predict_1", "truth_1"] / (image_qda$conf_mat["predict_1", "truth_1"] + image_qda$conf_mat["predict_-1", "truth_1"] )
+image_boost_recall <- image_boost$conf_mat["predict_1", "truth_1"] / (image_boost$conf_mat["predict_1", "truth_1"] + image_boost$conf_mat["predict_-1", "truth_1"] )
+
+block_log_recall <- block_log$conf_mat["predict_1", "truth_1"] / (block_log$conf_mat["predict_1", "truth_1"] + block_log$conf_mat["predict_-1", "truth_1"] )
+block_rf_recall <- block_rf$conf_mat["predict_1", "truth_1"] / (block_rf$conf_mat["predict_1", "truth_1"] + block_rf$conf_mat["predict_-1", "truth_1"] )
+block_lda_recall <- block_lda$conf_mat["predict_1", "truth_1"] / (block_lda$conf_mat["predict_1", "truth_1"] + block_lda$conf_mat["predict_-1", "truth_1"] )
+block_qda_recall <- block_qda$conf_mat["predict_1", "truth_1"] / (block_qda$conf_mat["predict_1", "truth_1"] + block_qda$conf_mat["predict_-1", "truth_1"] )
+block_boost_recall <- block_boost$conf_mat["predict_1", "truth_1"] / (block_boost$conf_mat["predict_1", "truth_1"] + block_boost$conf_mat["predict_-1", "truth_1"] )
+
+# recall = TP / TP + FN
+# F1 = 2 * 1 / ((1 / precision) + (1/recall))
+
+image_log_f <- 2 * 1 / ((1 / image_log$precision) + (1 / image_log_recall))
+image_rf_f <- 2 * 1 / ((1 / image_rf$precision) + (1 / image_rf_recall))
+image_boost_f <- 2 * 1 / ((1 / image_boost$precision) + (1 / image_boost_recall))
+image_lda_f <- 2 * 1 / ((1 / image_lda$precision) + (1 / image_lda_recall))
+image_qda_f <- 2 * 1 / ((1 / image_qda$precision) + (1 / image_qda_recall))
+
+block_log_f <- 2 * 1 / ((1 / block_log$precision) + (1 / block_log_recall))
+block_rf_f <- 2 * 1 / ((1 / block_rf$precision) + (1 / block_rf_recall))
+block_boost_f <- 2 * 1 / ((1 / block_boost$precision) + (1 / block_boost_recall))
+block_lda_f <- 2 * 1 / ((1 / block_lda$precision) + (1 / block_lda_recall))
+block_qda_f <- 2 * 1 / ((1 / block_qda$precision) + (1 / block_qda_recall))
+
+image_f <- round(c(image_log_f, image_rf_f,image_boost_f,image_lda_f,image_qda_f),4)
+block_f <- round(c(block_log_f, block_rf_f,block_boost_f,block_lda_f,block_qda_f),4)
+models <- c("Logistic Regression", "Random Forest", "Boosted Trees", "LDA", "QDA")
+
+bind_cols(Model = models, `Image Split` = image_f) %>%
+  bind_cols(`Block Split` = block_f) %>%
+  arrange(desc(`Block Split`)) -> f1_table
+
+f1_table %>%
+  kbl() %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+```
+
+
+
 ```{r fig.width = 12}
 ## CONF MATRIX IMAGE
 p1 <- tibble(image_log$conf_mat) %>% 
   mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
   rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
   pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  mutate(value = value / sum(value)) %>%
   ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
   geom_tile(aes(fill = value))+
   geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
@@ -628,8 +673,9 @@ p1 <- tibble(image_log$conf_mat) %>%
 
 p2 <- tibble(image_rf$conf_mat) %>% 
   mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
-  rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
-  pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  rename(Clear = `truth_-1`, Cloudy = truth_1) %>% 
+  pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label") %>%
+  mutate(value = value / sum(value)) %>%
   ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
   geom_tile(aes(fill = value))+
   geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
@@ -641,6 +687,7 @@ p3 <- tibble(image_boost$conf_mat) %>%
   mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
   rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
   pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  mutate(value = value / sum(value)) %>%
   ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
   geom_tile(aes(fill = value))+
   geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
@@ -652,6 +699,7 @@ p4 <- tibble(image_lda$conf_mat) %>%
   mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
   rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
   pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  mutate(value = value / sum(value)) %>%
   ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
   geom_tile(aes(fill = value))+
   geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
@@ -663,6 +711,7 @@ p5 <- tibble(image_qda$conf_mat) %>%
   mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
   rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
   pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  mutate(value = value / sum(value)) %>%
   ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
   geom_tile(aes(fill = value))+
   geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
@@ -681,6 +730,7 @@ p1 <- tibble(block_log$conf_mat) %>%
   mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
   rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
   pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  mutate(value = value / sum(value)) %>%
   ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
   geom_tile(aes(fill = value))+
   geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
@@ -692,6 +742,7 @@ p2 <- tibble(block_rf$conf_mat) %>%
   mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
   rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
   pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  mutate(value = value / sum(value)) %>%
   ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
   geom_tile(aes(fill = value))+
   geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
@@ -703,6 +754,7 @@ p3 <- tibble(block_boost$conf_mat) %>%
   mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
   rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
   pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  mutate(value = value / sum(value)) %>%
   ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
   geom_tile(aes(fill = value))+
   geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
@@ -714,6 +766,7 @@ p4 <- tibble(block_lda$conf_mat) %>%
   mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
   rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
   pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  mutate(value = value / sum(value)) %>%
   ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
   geom_tile(aes(fill = value))+
   geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
@@ -725,6 +778,7 @@ p5 <- tibble(block_qda$conf_mat) %>%
   mutate(`Predicted Label` = c("Clear", "Cloudy")) %>%
   rename(Clear = `truth_-1`, Cloudy = truth_1) %>%
   pivot_longer(cols = `Clear`:Cloudy, names_to = "True Label")%>%
+  mutate(value = value / sum(value)) %>%
   ggplot(aes(x = `Predicted Label`, y = `True Label`)) + 
   geom_tile(aes(fill = value))+
   geom_text(aes(label = sprintf("%.2f", value)), vjust = 1, color = "white", size = 9) +
