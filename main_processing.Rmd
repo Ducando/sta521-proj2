@@ -4,7 +4,8 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE, warning = FALSE, message = FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, eval = FALSE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, 
+                      eval = FALSE)
 
 library(tidyverse)
 library(viridis)
