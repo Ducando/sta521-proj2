@@ -47,4 +47,12 @@ There are two approaches in the model for cross validation and calculating the e
 
 
 ### Random Forest 
+The random forest model takes advantage of the ranger package, which is a fast implementation of random forests. There are three hyperparameters that are tuned in this process:
 
+- **mtry** - tunes the number of variables available at each split, which ranges from 1 to 8
+- **min_n** - tunes the minimum node size for the trees, which ranges from 1 to 30
+- **trees** - tunes the number of trees built by the random forest, which ranges from 50 to 500
+
+mtry and min_n are tuned simultaneously using the block split data and the results are reported using a heatmap. The number of trees is then tuned using the optimal values chosen for mtry and min_n. These parameters are then all plugged into the final model which is trained on the training set and tested both on the validation set and the test set. Two final models are created: one reporting the class of each data point and one reporting the probability of each data point being cloudy. These results are visualized on the all images as well as the misclassifications for each image. Then the entire process is repeated with the image split.
+
+Finally, a single decision tree is created using the rpart package to visualize the structure of a tree.
